@@ -1,0 +1,13 @@
+{
+    "rust-analyzer.linkedProjects": [
+        "./backend/Cargo.toml"
+    ],
+    "[rust]": {
+        "editor.formatOnSave": true
+    },
+    "files.exclude": {
+        ".vscode": true,
+        "**/target": true,
+        "**/Cargo.lock": true,
+    },
+}
