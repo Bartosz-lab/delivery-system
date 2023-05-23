@@ -10,4 +10,5 @@
         "**/target": true,
         "**/Cargo.lock": true,
     },
+    "rust-analyzer.showUnlinkedFileNotification": false,
 }
