@@ -1,44 +1,39 @@
-use actix_web::{post, web, web::Json, HttpResponse, Responder};
+use actix_web::web;
 use utoipa::OpenApi;
 
-use crate::auth::app::{AdminExtractor, AuthExtractor};
-use crate::auth::domain::repository::UserTrait;
-use crate::auth::domain::User;
+use crate::auth::domain::Role;
+
+mod role_views;
+mod user_views;
 
 mod structs;
-use structs::{AddBody, AddResponse};
+use structs::{AddResponse, RolesResponse, UserBody};
 
 #[derive(OpenApi)]
-#[openapi(paths(add), components(schemas(AddBody, AddResponse)))]
+#[openapi(
+    paths(
+        user_views::add,
+        user_views::modify,
+        user_views::get_user,
+        user_views::get_user_by_id,
+        user_views::modify_by_id,
+        user_views::delete_user,
+        role_views::get_user_roles,
+        role_views::add_role,
+        role_views::del_role,
+    ),
+    components(schemas(UserBody, AddResponse, RolesResponse, Role))
+)]
 pub struct ApiDoc;
 
 pub fn config(cfg: &mut web::ServiceConfig) {
-    cfg.service(add);
-}
-
-#[utoipa::path(
-    context_path = "/user",
-    request_body(content = AddBody,
-        content_type = "application/json", 
-        description = "Create new user",
-    ),
-    responses(
-        (status = CREATED, body = AddResponse, description = "User created successfully", content_type = "application/json"),
-        (status = BAD_REQUEST, description = "User not created due to invalid data"),
-        (status = UNAUTHORIZED, description = "User isn't logged in"),
-        (status = FORBIDDEN, description = "User don't have permissions"),
-    )
-)]
-#[post("")]
-async fn add(body: Json<AddBody>, _: AuthExtractor, _: AdminExtractor) -> impl Responder {
-    let res = User::insert(User::new(
-        body.firstname.to_owned(),
-        body.lastname.to_owned(),
-        body.email.to_owned(),
-        body.phone.to_owned(),
-    ));
-    match res {
-        Some(id) => HttpResponse::Created().json(AddResponse { id }),
-        None => HttpResponse::BadRequest().finish(),
-    }
+    cfg.service(user_views::add)
+        .service(user_views::modify)
+        .service(user_views::get_user)
+        .service(user_views::get_user_by_id)
+        .service(user_views::modify_by_id)
+        .service(user_views::delete_user)
+        .service(role_views::get_user_roles)
+        .service(role_views::add_role)
+        .service(role_views::del_role);
 }

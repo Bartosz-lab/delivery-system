@@ -7,5 +7,5 @@ pub trait RoleTrait {
 
     fn check_user(&self, user_id: usize) -> bool;
 
-    fn get_user_roles(user_id: usize) -> Vec<Role>;
+    fn get_user_roles(user_id: usize) -> Option<Vec<Role>>;
 }

@@ -2,7 +2,7 @@ use actix_web::{
     cookie::{time::Duration as ActixWebDuration, Cookie},
     post, web,
     web::Json,
-    HttpMessage, HttpRequest, HttpResponse, Responder,
+    HttpResponse, Responder,
 };
 use chrono::{prelude::*, Duration};
 use jsonwebtoken::{encode, EncodingKey, Header};
@@ -51,7 +51,7 @@ async fn login(body: Json<LoginBody>, data: web::Data<AppState>) -> impl Respond
                 let claims: TokenClaims = TokenClaims {
                     sub: serde_json::json!(ClaimsData {
                         user_id: user.id,
-                        roles: Role::get_user_roles(user.id),
+                        roles: Role::get_user_roles(user.id).unwrap(),
                     })
                     .to_string(),
                     exp: (now + Duration::minutes(data.env.jwt_expires_in)).timestamp() as usize,
@@ -107,27 +107,18 @@ async fn logout(_: AuthExtractor) -> impl Responder {
     )
 )]
 #[post("/changepass")]
-async fn changepass(
-    req: HttpRequest,
-    body: Json<ChangePassBody>,
-    _: AuthExtractor,
-) -> impl Responder {
-    let binding = req.extensions();
-
-    match binding.get::<ClaimsData>() {
+async fn changepass(body: Json<ChangePassBody>, auth: AuthExtractor) -> impl Responder {
+    match User::find_by_id(auth.user.user_id) {
         None => HttpResponse::InternalServerError().finish(),
-        Some(req_user) => match User::find_by_id(req_user.user_id) {
-            None => HttpResponse::InternalServerError().finish(),
-            Some(mut user) => {
-                // there should be pass validation
-                if true {
-                    user.set_password(body.password.clone());
-                    User::save(user);
-                    HttpResponse::Ok().finish()
-                } else {
-                    HttpResponse::NotAcceptable().finish()
-                }
+        Some(mut user) => {
+            // there should be pass validation
+            if true {
+                user.set_password(body.password.clone());
+                User::save(user);
+                HttpResponse::Ok().finish()
+            } else {
+                HttpResponse::NotAcceptable().finish()
             }
-        },
+        }
     }
 }

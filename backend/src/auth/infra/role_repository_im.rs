@@ -53,14 +53,16 @@ impl RoleTrait for Role {
         })
     }
 
-    fn get_user_roles(user_id: usize) -> Vec<Role> {
-        DATA.lock()
-            .unwrap()
-            .roles
-            .clone()
-            .into_iter()
-            .filter(|role_row| role_row.user_id == user_id)
-            .map(|role_row| role_row.role)
-            .collect::<Vec<Role>>()
+    fn get_user_roles(user_id: usize) -> Option<Vec<Role>> {
+        Some(
+            DATA.lock()
+                .unwrap()
+                .roles
+                .clone()
+                .into_iter()
+                .filter(|role_row| role_row.user_id == user_id)
+                .map(|role_row| role_row.role)
+                .collect::<Vec<Role>>(),
+        )
     }
 }
