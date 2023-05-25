@@ -41,8 +41,15 @@ impl UserTrait for User {
         Some(id)
     }
 
-    fn delete(_id: usize) -> bool {
-        false
+    fn delete(user_id: usize) -> bool {
+        let _ = &DATA.lock().unwrap().users.retain(|user| user.id != user_id);
+        true
+    }
+
+    fn save(user: User) -> bool {
+        User::delete(user.id);
+        DATA.lock().unwrap().users.push(user);
+        true
     }
 
     fn find_by_id(id: usize) -> Option<User> {

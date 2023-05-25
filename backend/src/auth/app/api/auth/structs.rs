@@ -8,3 +8,9 @@ pub struct LoginBody {
     #[schema(example = "Pass1234")]
     pub password: String,
 }
+
+#[derive(Deserialize, ToSchema)]
+pub struct ChangePassBody {
+    #[schema(example = "Pass1234")]
+    pub password: String,
+}

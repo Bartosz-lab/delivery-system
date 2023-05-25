@@ -1,8 +1,8 @@
 use actix_web::{
     cookie::{time::Duration as ActixWebDuration, Cookie},
-    get, post, web,
+    post, web,
     web::Json,
-    HttpResponse, Responder,
+    HttpMessage, HttpRequest, HttpResponse, Responder,
 };
 use chrono::{prelude::*, Duration};
 use jsonwebtoken::{encode, EncodingKey, Header};
@@ -16,10 +16,13 @@ use crate::auth::domain::{
 use crate::AppState;
 
 mod structs;
-use structs::LoginBody;
+use structs::{ChangePassBody, LoginBody};
 
 #[derive(OpenApi)]
-#[openapi(paths(login, logout), components(schemas(LoginBody)))]
+#[openapi(
+    paths(login, logout, changepass),
+    components(schemas(LoginBody, ChangePassBody))
+)]
 pub struct ApiDoc;
 
 pub fn config(cfg: &mut web::ServiceConfig) {
@@ -38,12 +41,12 @@ pub fn config(cfg: &mut web::ServiceConfig) {
     )
 )]
 #[post("/login")]
-async fn login(login_data: Json<LoginBody>, data: web::Data<AppState>) -> impl Responder {
-    let user = User::find_by_email(login_data.login.clone());
+async fn login(body: Json<LoginBody>, data: web::Data<AppState>) -> impl Responder {
+    let user = User::find_by_email(body.login.clone());
     match user {
         None => HttpResponse::NotAcceptable().finish(),
         Some(user) => {
-            if user.check_password(login_data.password.clone()) {
+            if user.check_password(body.password.clone()) {
                 let now = Utc::now();
                 let claims: TokenClaims = TokenClaims {
                     sub: serde_json::json!(ClaimsData {
@@ -91,7 +94,40 @@ async fn logout(_: AuthExtractor) -> impl Responder {
     HttpResponse::Ok().cookie(cookie).finish()
 }
 
-#[get("/changepass")]
-async fn changepass() -> impl Responder {
-    HttpResponse::Forbidden().finish()
+#[utoipa::path(
+    context_path = "/auth",
+    request_body(content = ChangePassBody,
+        content_type = "application/json", 
+        description = "New password",
+    ),
+    responses(
+        (status = OK, description = "Password was changed"),
+        (status = NOT_ACCEPTABLE, description = "Password to week"),
+        (status = UNAUTHORIZED, description = "User isn't logged in"),
+    )
+)]
+#[post("/changepass")]
+async fn changepass(
+    req: HttpRequest,
+    body: Json<ChangePassBody>,
+    _: AuthExtractor,
+) -> impl Responder {
+    let binding = req.extensions();
+
+    match binding.get::<ClaimsData>() {
+        None => HttpResponse::InternalServerError().finish(),
+        Some(req_user) => match User::find_by_id(req_user.user_id) {
+            None => HttpResponse::InternalServerError().finish(),
+            Some(mut user) => {
+                // there should be pass validation
+                if true {
+                    user.set_password(body.password.clone());
+                    User::save(user);
+                    HttpResponse::Ok().finish()
+                } else {
+                    HttpResponse::NotAcceptable().finish()
+                }
+            }
+        },
+    }
 }
