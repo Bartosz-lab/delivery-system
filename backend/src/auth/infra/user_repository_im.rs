@@ -9,25 +9,26 @@ struct UserRepository {
 }
 
 lazy_static! {
-    static ref DATA: Mutex<UserRepository> = Mutex::new(UserRepository {
-        users: vec![
-            User {
-                id: 1,
-                firstname: "Jan".to_string(),
-                lastname: "Testowy".to_string(),
-                email: "jan@testowy.com".to_string(),
-                phone: "123456789".to_string(),
-            },
-            User {
-                id: 2,
-                firstname: "Anna".to_string(),
-                lastname: "Testowa".to_string(),
-                email: "anna@testowa.com".to_string(),
-                phone: "123456789".to_string(),
-            }
-        ],
-        last_id: 10,
-    });
+    static ref DATA: Mutex<UserRepository> = {
+        let mut user1 = User::new(
+            "Jan".to_string(),
+            "Testowy".to_string(),
+            "jan@testowy.com".to_string(),
+            "123456789".to_string(),
+        );
+        user1.id = 1;
+        let mut user2 = User::new(
+            "Anna".to_string(),
+            "Testowa".to_string(),
+            "anna@testowa.com".to_string(),
+            "123456789".to_string(),
+        );
+        user2.id = 2;
+        Mutex::new(UserRepository {
+            users: vec![user1, user2],
+            last_id: 10,
+        })
+    };
 }
 
 impl UserTrait for User {
