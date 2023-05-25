@@ -8,8 +8,11 @@ use chrono::{prelude::*, Duration};
 use jsonwebtoken::{encode, EncodingKey, Header};
 use utoipa::OpenApi;
 
-use crate::auth::app::{AuthExtractor, TokenClaims};
-use crate::auth::domain::{repository::UserTrait, User};
+use crate::auth::app::{AuthExtractor, ClaimsData, TokenClaims};
+use crate::auth::domain::{
+    repository::{RoleTrait, UserTrait},
+    Role, User,
+};
 use crate::AppState;
 
 mod structs;
@@ -43,7 +46,11 @@ async fn login(login_data: Json<LoginBody>, data: web::Data<AppState>) -> impl R
             if user.check_password(login_data.password.clone()) {
                 let now = Utc::now();
                 let claims: TokenClaims = TokenClaims {
-                    sub: user.id.to_string(),
+                    sub: serde_json::json!(ClaimsData {
+                        user_id: user.id,
+                        roles: Role::get_user_roles(user.id),
+                    })
+                    .to_string(),
                     exp: (now + Duration::minutes(data.env.jwt_expires_in)).timestamp() as usize,
                     iat: now.timestamp() as usize,
                 };

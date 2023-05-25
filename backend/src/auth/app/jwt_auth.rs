@@ -1,11 +1,18 @@
-use actix_web::error::ErrorUnauthorized;
+use actix_web::error::{ErrorForbidden, ErrorUnauthorized};
 use actix_web::{dev::Payload, Error as ActixWebError};
 use actix_web::{http, web, FromRequest, HttpMessage, HttpRequest};
 use jsonwebtoken::{decode, DecodingKey, Validation};
 use serde::{Deserialize, Serialize};
 use std::future::{ready, Ready};
 
+use crate::auth::domain::Role;
 use crate::AppState;
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct ClaimsData {
+    pub user_id: usize,
+    pub roles: Vec<Role>,
+}
 
 #[derive(Serialize, Deserialize)]
 pub struct TokenClaims {
@@ -15,7 +22,7 @@ pub struct TokenClaims {
 }
 
 pub struct AuthExtractor {
-    pub user_id: usize,
+    pub user: ClaimsData,
 }
 
 impl FromRequest for AuthExtractor {
@@ -46,12 +53,41 @@ impl FromRequest for AuthExtractor {
 
                 match decode {
                     Ok(c) => {
-                        let user_id = c.claims.sub.parse::<usize>().unwrap();
-                        req.extensions_mut().insert::<usize>(user_id);
+                        let user: ClaimsData = serde_json::from_str(c.claims.sub.as_str()).unwrap();
+                        req.extensions_mut().insert::<ClaimsData>(user.clone());
 
-                        ready(Ok(AuthExtractor { user_id }))
+                        ready(Ok(AuthExtractor { user }))
                     }
-                    Err(_) => ready(Err(ErrorUnauthorized("Invalid Token"))),
+                    Err(e) => ready(Err(ErrorUnauthorized(format!(
+                        "Invalid Token {}",
+                        e.to_string()
+                    )))),
+                }
+            }
+        }
+    }
+}
+
+pub struct AdminExtractor;
+
+impl FromRequest for AdminExtractor {
+    type Error = ActixWebError;
+    type Future = Ready<Result<Self, Self::Error>>;
+    fn from_request(req: &HttpRequest, _: &mut Payload) -> Self::Future {
+        let binding = req.extensions();
+        let user_opt = binding.get::<ClaimsData>();
+
+        match user_opt {
+            None => ready(Err(ErrorUnauthorized(
+                "You are not logged in, please provide Token",
+            ))),
+            Some(user) => {
+                if user.roles.contains(&Role::Admin) {
+                    ready(Ok(AdminExtractor))
+                } else {
+                    ready(Err(ErrorForbidden(
+                        "You are not logged in, please provide Token",
+                    )))
                 }
             }
         }

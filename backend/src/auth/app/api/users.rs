@@ -1,6 +1,7 @@
-use actix_web::{http::StatusCode, post, web, web::Json, HttpResponse, Responder};
+use actix_web::{post, web, web::Json, HttpResponse, Responder};
 use utoipa::OpenApi;
 
+use crate::auth::app::{AdminExtractor, AuthExtractor};
 use crate::auth::domain::repository::UserTrait;
 use crate::auth::domain::User;
 
@@ -23,11 +24,13 @@ pub fn config(cfg: &mut web::ServiceConfig) {
     ),
     responses(
         (status = CREATED, body = AddResponse, description = "User created successfully", content_type = "application/json"),
-        (status = BAD_REQUEST, description = "User not created due to invalid data")
+        (status = BAD_REQUEST, description = "User not created due to invalid data"),
+        (status = UNAUTHORIZED, description = "User isn't logged in"),
+        (status = FORBIDDEN, description = "User don't have permissions"),
     )
 )]
-#[post("/")]
-async fn add(body: Json<AddBody>) -> impl Responder {
+#[post("")]
+async fn add(body: Json<AddBody>, _: AuthExtractor, _: AdminExtractor) -> impl Responder {
     let res = User::insert(User::new(
         body.firstname.to_owned(),
         body.lastname.to_owned(),
@@ -35,9 +38,7 @@ async fn add(body: Json<AddBody>) -> impl Responder {
         body.phone.to_owned(),
     ));
     match res {
-        Some(id) => HttpResponse::Ok()
-            .status(StatusCode::CREATED)
-            .json(AddResponse { id }),
-        None => HttpResponse::Ok().status(StatusCode::BAD_REQUEST).finish(),
+        Some(id) => HttpResponse::Created().json(AddResponse { id }),
+        None => HttpResponse::BadRequest().finish(),
     }
 }
