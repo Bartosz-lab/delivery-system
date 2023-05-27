@@ -22,8 +22,20 @@ lazy_static! {
             "01-200".to_string(),
         );
         address2.id = 2;
+        let mut address3 = Address::new(
+            "ul. Kasztanowa 12".to_string(),
+            "Warszawa".to_string(),
+            "01-200".to_string(),
+        );
+        address3.id = 3;
+        let mut address4 = Address::new(
+            "ul. Kasztanowa 12".to_string(),
+            "Wrocław".to_string(),
+            "01-200".to_string(),
+        );
+        address4.id = 4;
         Mutex::new(AddressRepository {
-            list: vec![address1, address2],
+            list: vec![address1, address2, address3, address4],
             last_id: 10,
         })
     };
