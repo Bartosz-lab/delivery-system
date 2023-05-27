@@ -12,6 +12,7 @@ use utoipa_swagger_ui::{SwaggerUi, Url};
 
 mod auth;
 mod config;
+mod delivery;
 
 use config::Config;
 
@@ -43,6 +44,10 @@ async fn main() -> Result<(), impl Error> {
                     Url::new("auth", "/api-docs/auth.json"),
                     auth::app::api::auth::ApiDoc::openapi(),
                 ),
+                (
+                    Url::new("tradeparner", "/api-docs/tradeparner.json"),
+                    delivery::app::api::tradepartner::ApiDoc::openapi(),
+                ),
             ]))
             .service(
                 web::scope("/auth")
@@ -53,6 +58,11 @@ async fn main() -> Result<(), impl Error> {
                 web::scope("/user")
                     .wrap(NormalizePath::trim())
                     .configure(auth::app::api::users::config),
+            )
+            .service(
+                web::scope("/tradeparner")
+                    .wrap(NormalizePath::trim())
+                    .configure(delivery::app::api::tradepartner::config),
             )
     })
     .bind(("127.0.0.1", 8080))?
