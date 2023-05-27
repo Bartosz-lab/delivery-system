@@ -27,6 +27,18 @@ async fn main() -> Result<(), impl Error> {
 
     let config = Config::init();
 
+    let mut swagger_urls = vec![
+        (
+            Url::new("user", "/api-docs/user.json"),
+            auth::app::api::users::ApiDoc::openapi(),
+        ),
+        (
+            Url::new("auth", "/api-docs/auth.json"),
+            auth::app::api::auth::ApiDoc::openapi(),
+        ),
+    ];
+    swagger_urls.append(delivery::app::api::trade_partner::swagger_urls().as_mut());
+
     println!("🚀 Server started successfully");
 
     HttpServer::new(move || {
@@ -35,20 +47,7 @@ async fn main() -> Result<(), impl Error> {
                 env: config.clone(),
             }))
             .wrap(Logger::new("%a \"%r\" %s %b %T"))
-            .service(SwaggerUi::new("/swagger-ui/{_:.*}").urls(vec![
-                (
-                    Url::new("user", "/api-docs/user.json"),
-                    auth::app::api::users::ApiDoc::openapi(),
-                ),
-                (
-                    Url::new("auth", "/api-docs/auth.json"),
-                    auth::app::api::auth::ApiDoc::openapi(),
-                ),
-                (
-                    Url::new("tradeparner", "/api-docs/tradeparner.json"),
-                    delivery::app::api::trade_partner::ApiDoc::openapi(),
-                ),
-            ]))
+            .service(SwaggerUi::new("/swagger-ui/{_:.*}").urls(swagger_urls.clone()))
             .service(
                 web::scope("/auth")
                     .wrap(NormalizePath::trim())

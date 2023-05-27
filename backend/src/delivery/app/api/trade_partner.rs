@@ -1,5 +1,6 @@
 use actix_web::web;
 use utoipa::OpenApi;
+use utoipa_swagger_ui::Url;
 
 use crate::delivery::domain::value_objects::ParcelSize;
 
@@ -22,7 +23,14 @@ use structs::{AddResponse, MoneyBody, PriceListBody, TradePartnerBody};
     ),
     components(schemas(TradePartnerBody, MoneyBody, AddResponse, PriceListBody, ParcelSize))
 )]
-pub struct ApiDoc;
+struct ApiDocAdmin;
+
+pub fn swagger_urls() -> Vec<(Url<'static>, utoipa::openapi::OpenApi)> {
+    vec![(
+        Url::new("Trade Partner Admin", "/api-docs/tradeparner.json"),
+        ApiDocAdmin::openapi(),
+    )]
+}
 
 pub fn config(cfg: &mut web::ServiceConfig) {
     cfg.service(admin_views::get_trade_partner)
