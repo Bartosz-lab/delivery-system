@@ -5,7 +5,7 @@ use rusty_money::{iso, Money};
 use crate::auth::app::{AdminExtractor, AuthExtractor};
 use crate::delivery::app::api::trade_partner::structs::{
     AddResponse, MoneyBody, PriceListBody, TradePartnerAdminBody, TradePartnerBody,
-    TradePartnerListBody, WarehouseBody, WarehouseRequest,
+    TradePartnerListBody, WarehouseAdminBody, WarehouseBody,
 };
 use crate::delivery::domain::repository::{AddressTrait, TradePartnerTrait, WarehouseTrait};
 use crate::delivery::domain::value_objects::ParcelSize;
@@ -301,7 +301,7 @@ async fn delete_price(
     context_path = "/tradepartner",
     tag = "Warehouse Admin",
     responses(
-        (status = OK, body = Vec<WarehouseBody>, description = "Warehouse List for Trade Partner", content_type = "application/json"),
+        (status = OK, body = Vec<WarehouseAdminBody>, description = "Warehouse List for Trade Partner", content_type = "application/json"),
         (status = NOT_FOUND, description = "Trade Partner don't exist"),
         (status = UNAUTHORIZED, description = "User isn't logged in"),
         (status = FORBIDDEN, description = "User don't have permissions"),
@@ -320,13 +320,13 @@ async fn get_warehouse_list(
             Warehouse::find_by_trade_partner(trade_partner.id)
                 .into_iter()
                 .enumerate()
-                .map(|(id, warehouse)| WarehouseBody {
+                .map(|(id, warehouse)| WarehouseAdminBody {
                     id,
                     name: warehouse.name,
                     trade_partner_id: warehouse.trade_partner_id,
                     address: Address::find_by_id(warehouse.address_id).unwrap(),
                 })
-                .collect::<Vec<WarehouseBody>>(),
+                .collect::<Vec<WarehouseAdminBody>>(),
         ),
     }
 }
@@ -335,7 +335,7 @@ async fn get_warehouse_list(
     context_path = "/tradepartner",
     tag = "Warehouse Admin",
     responses(
-        (status = OK, body = WarehouseBody, description = "Warehouse data", content_type = "application/json"),
+        (status = OK, body = WarehouseAdminBody, description = "Warehouse data", content_type = "application/json"),
         (status = NOT_FOUND, description = "Warehouse don't exist"),
         (status = UNAUTHORIZED, description = "User isn't logged in"),
         (status = FORBIDDEN, description = "User don't have permissions"),
@@ -356,7 +356,7 @@ async fn get_warehouse(
         .next();
     match warehouse_opt {
         None => HttpResponse::NotFound().finish(),
-        Some((id, warehouse)) => HttpResponse::Ok().json(WarehouseBody {
+        Some((id, warehouse)) => HttpResponse::Ok().json(WarehouseAdminBody {
             id,
             name: warehouse.name,
             trade_partner_id: warehouse.trade_partner_id,
@@ -368,7 +368,7 @@ async fn get_warehouse(
 #[utoipa::path(
     context_path = "/tradepartner",
     tag = "Warehouse Admin",
-    request_body(content = WarehouseRequest,
+    request_body(content = WarehouseBody,
         content_type = "application/json",
         description = "Add new Warehouse for Trade Partner",
     ),
@@ -382,7 +382,7 @@ async fn get_warehouse(
 )]
 #[post("/{trade_partner_id}/warehouse")]
 async fn add_warehouse(
-    body: Json<WarehouseRequest>,
+    body: Json<WarehouseBody>,
     path: web::Path<usize>,
     _: AuthExtractor,
     _: AdminExtractor,
@@ -417,7 +417,7 @@ async fn add_warehouse(
 #[utoipa::path(
     context_path = "/tradepartner",
     tag = "Warehouse Admin",
-    request_body(content = WarehouseRequest,
+    request_body(content = WarehouseBody,
         content_type = "application/json",
         description = "Modify Warehouse for Trade Partner",
     ),
@@ -431,7 +431,7 @@ async fn add_warehouse(
 )]
 #[put("/{trade_partner_id}/warehouse/{warehouse_id}")]
 async fn modify_warehouse(
-    body: Json<WarehouseRequest>,
+    body: Json<WarehouseBody>,
     path: web::Path<(usize, usize)>,
     _: AuthExtractor,
     _: AdminExtractor,

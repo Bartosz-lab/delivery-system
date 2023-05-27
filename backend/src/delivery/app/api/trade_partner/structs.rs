@@ -45,7 +45,7 @@ pub struct MoneyBody {
 }
 
 #[derive(Serialize, Deserialize, ToSchema)]
-pub struct WarehouseBody {
+pub struct WarehouseAdminBody {
     #[schema(example = 1)]
     pub id: usize,
     #[schema(example = "Magazyn 1")]
@@ -56,7 +56,7 @@ pub struct WarehouseBody {
 }
 
 #[derive(Serialize, Deserialize, ToSchema)]
-pub struct WarehouseRequest {
+pub struct WarehouseBody {
     #[schema(example = "Magazyn 1")]
     #[schema(default = "_")]
     pub name: String,
