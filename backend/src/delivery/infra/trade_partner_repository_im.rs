@@ -58,4 +58,8 @@ impl TradePartnerTrait for TradePartner {
             _ => Some(tradeparners.first().unwrap().clone().clone()),
         }
     }
+
+    fn get_all() -> Vec<TradePartner> {
+        DATA.lock().unwrap().tradeparners.clone()
+    }
 }

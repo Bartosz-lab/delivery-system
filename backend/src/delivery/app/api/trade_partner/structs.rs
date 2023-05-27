@@ -9,6 +9,12 @@ pub struct TradePartnerBody {
     #[schema(default = "_")]
     pub name: String,
 }
+
+#[derive(Serialize, Deserialize, ToSchema)]
+pub struct TradePartnerListBody {
+    pub list: Vec<TradePartnerBody>,
+}
+
 #[derive(Serialize, ToSchema)]
 pub struct AddResponse {
     #[schema(example = 1)]

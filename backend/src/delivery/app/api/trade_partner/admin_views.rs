@@ -4,7 +4,7 @@ use rusty_money::{iso, Money};
 
 use crate::auth::app::{AdminExtractor, AuthExtractor};
 use crate::delivery::app::api::trade_partner::structs::{
-    AddResponse, MoneyBody, PriceListBody, TradePartnerBody,
+    AddResponse, MoneyBody, PriceListBody, TradePartnerBody, TradePartnerListBody,
 };
 use crate::delivery::domain::repository::TradePartnerTrait;
 use crate::delivery::domain::value_objects::ParcelSize;
@@ -31,6 +31,28 @@ async fn add(body: Json<TradePartnerBody>, _: AuthExtractor, _: AdminExtractor) 
         Some(id) => HttpResponse::Created().json(AddResponse { id }),
         None => HttpResponse::BadRequest().finish(),
     }
+}
+
+#[utoipa::path(
+    context_path = "/tradeparner",
+    tag = "Trade Parner Admin",
+    responses(
+        (status = OK, body = TradePartnerListBody, description = "Trade Parner list", content_type = "application/json"),
+        (status = UNAUTHORIZED, description = "User isn't logged in"),
+        (status = FORBIDDEN, description = "User don't have permissions"),
+    )
+)]
+#[get("/list")]
+async fn get_trade_partner_list(_: AuthExtractor, _: AdminExtractor) -> impl Responder {
+    let list = TradePartner::get_all();
+    HttpResponse::Ok().json(TradePartnerListBody {
+        list: list
+            .into_iter()
+            .map(|trade_partner| TradePartnerBody {
+                name: trade_partner.name,
+            })
+            .collect(),
+    })
 }
 
 #[utoipa::path(

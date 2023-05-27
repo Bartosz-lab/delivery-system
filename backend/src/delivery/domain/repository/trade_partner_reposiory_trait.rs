@@ -8,4 +8,6 @@ pub trait TradePartnerTrait {
     fn delete(id: usize) -> bool;
 
     fn find_by_id(id: usize) -> Option<TradePartner>;
+
+    fn get_all() -> Vec<TradePartner>;
 }
