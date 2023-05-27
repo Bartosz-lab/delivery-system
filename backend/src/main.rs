@@ -46,7 +46,7 @@ async fn main() -> Result<(), impl Error> {
                 ),
                 (
                     Url::new("tradeparner", "/api-docs/tradeparner.json"),
-                    delivery::app::api::tradepartner::ApiDoc::openapi(),
+                    delivery::app::api::trade_partner::ApiDoc::openapi(),
                 ),
             ]))
             .service(
@@ -62,7 +62,7 @@ async fn main() -> Result<(), impl Error> {
             .service(
                 web::scope("/tradeparner")
                     .wrap(NormalizePath::trim())
-                    .configure(delivery::app::api::tradepartner::config),
+                    .configure(delivery::app::api::trade_partner::config),
             )
     })
     .bind(("127.0.0.1", 8080))?

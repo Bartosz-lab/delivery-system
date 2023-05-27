@@ -1,1 +1,1 @@
-pub mod tradepartner;
+pub mod trade_partner;

@@ -3,7 +3,7 @@ use rust_decimal::{prelude::*, Decimal};
 use rusty_money::{iso, Money};
 
 use crate::auth::app::{AdminExtractor, AuthExtractor};
-use crate::delivery::app::api::tradepartner::structs::{
+use crate::delivery::app::api::trade_partner::structs::{
     AddResponse, MoneyBody, PriceListBody, TradePartnerBody,
 };
 use crate::delivery::domain::repository::TradePartnerTrait;

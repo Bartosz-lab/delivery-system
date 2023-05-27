@@ -1,6 +1,6 @@
 mod price_list;
 pub mod repository;
-mod tradepartner;
+mod trade_partner;
 pub(super) mod value_objects;
 
-pub(super) use tradepartner::TradePartner;
+pub(super) use trade_partner::TradePartner;
