@@ -26,6 +26,6 @@ pub struct AddResponse {
 
 #[derive(Serialize, ToSchema)]
 pub struct RolesResponse {
-    #[schema(example = json![vec![Role::Admin,  Role::PartnerApi("Test".to_string())]])]
+    #[schema(example = json![vec![Role::Admin,  Role::PartnerApi(1)]])]
     pub roles: Vec<Role>,
 }

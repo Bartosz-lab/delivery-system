@@ -86,8 +86,51 @@ impl FromRequest for AdminExtractor {
                     ready(Ok(AdminExtractor))
                 } else {
                     ready(Err(ErrorForbidden(
-                        "You are not logged in, please provide Token",
+                        "You are not have access to this endpoint",
                     )))
+                }
+            }
+        }
+    }
+}
+
+pub struct TradePartnerExtractor {
+    pub trade_partner_id: usize,
+}
+
+impl FromRequest for TradePartnerExtractor {
+    type Error = ActixWebError;
+    type Future = Ready<Result<Self, Self::Error>>;
+    fn from_request(req: &HttpRequest, _: &mut Payload) -> Self::Future {
+        let binding = req.extensions();
+        let user_opt = binding.get::<ClaimsData>();
+
+        match user_opt {
+            None => ready(Err(ErrorUnauthorized(
+                "You are not logged in, please provide Token",
+            ))),
+            Some(user) => {
+                let role_opt = user
+                    .roles
+                    .iter()
+                    .filter(|role| match role {
+                        Role::PartnerUser(_) => true,
+                        _ => false,
+                    })
+                    .next();
+                match role_opt {
+                    Some(role) => match role {
+                        Role::PartnerUser(id) => ready(Ok(TradePartnerExtractor {
+                            trade_partner_id: *id,
+                        })),
+                        _ => ready(Err(ErrorForbidden(
+                            "You are not have access to this endpoint",
+                        ))),
+                    },
+
+                    None => ready(Err(ErrorForbidden(
+                        "You are not have access to this endpoint",
+                    ))),
                 }
             }
         }

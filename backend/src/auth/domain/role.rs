@@ -5,6 +5,6 @@ use utoipa::ToSchema;
 pub enum Role {
     Admin,
     Courier,
-    PartnerUser(String),
-    PartnerApi(String),
+    PartnerUser(usize),
+    PartnerApi(usize),
 }

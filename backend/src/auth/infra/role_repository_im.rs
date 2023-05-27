@@ -22,7 +22,7 @@ lazy_static! {
                     user_id: 1,
                 },
                 RoleRow {
-                    role: Role::Admin,
+                    role: Role::PartnerUser(1),
                     user_id: 2,
                 },
             ],
