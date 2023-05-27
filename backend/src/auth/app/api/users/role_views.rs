@@ -7,7 +7,7 @@ use crate::auth::domain::Role;
 
 #[utoipa::path(
     context_path = "/user",
-    tag = "role",
+    tag = "Role Admin",
     responses(
         (status = OK, body = RolesResponse, description = "User roles", content_type = "application/json"),
         (status = NOT_FOUND, description = "User don't exist"),
@@ -30,7 +30,7 @@ async fn get_user_roles(
 
 #[utoipa::path(
     context_path = "/user",
-    tag = "role",
+    tag = "Role Admin",
     request_body(content = Role,
         content_type = "application/json", 
         description = "Attach role to user",
@@ -57,7 +57,7 @@ async fn add_role(
 
 #[utoipa::path(
     context_path = "/user",
-    tag = "role",
+    tag = "Role Admin",
     request_body(content = Role,
         content_type = "application/json", 
         description = "Detach role from user",

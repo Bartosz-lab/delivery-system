@@ -31,7 +31,7 @@ pub fn config(cfg: &mut web::ServiceConfig) {
 
 #[utoipa::path(
     context_path = "/auth",
-    tag = "auth",
+    tag = "Auth",
     request_body(content = LoginBody,
         content_type = "application/json", 
         description = "Login to app",
@@ -80,7 +80,7 @@ async fn login(body: Json<LoginBody>, data: web::Data<AppState>) -> impl Respond
 
 #[utoipa::path(
     context_path = "/auth",
-    tag = "auth",
+    tag = "Auth",
     responses(
         (status = OK, description = "User has been logged out"),
         (status = UNAUTHORIZED, description = "User isn't logged in"),
@@ -98,7 +98,7 @@ async fn logout(_: AuthExtractor) -> impl Responder {
 
 #[utoipa::path(
     context_path = "/auth",
-    tag = "auth",
+    tag = "Auth",
     request_body(content = ChangePassBody,
         content_type = "application/json", 
         description = "New password",

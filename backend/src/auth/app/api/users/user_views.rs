@@ -7,7 +7,7 @@ use crate::auth::domain::User;
 
 #[utoipa::path(
     context_path = "/user",
-    tag = "user_admin",
+    tag = "User Admin",
     request_body(content = UserBody,
         content_type = "application/json", 
         description = "Create new user",
@@ -35,7 +35,7 @@ async fn add(body: Json<UserBody>, _: AuthExtractor, _: AdminExtractor) -> impl 
 
 #[utoipa::path(
     context_path = "/user",
-    tag = "user",
+    tag = "User",
     request_body(content = UserBody,
         content_type = "application/json", 
         description = "Modify user",
@@ -75,7 +75,7 @@ async fn modify(body: Json<UserBody>, auth: AuthExtractor) -> impl Responder {
 
 #[utoipa::path(
     context_path = "/user",
-    tag = "user",
+    tag = "User",
     responses(
         (status = OK, body = UserBody, description = "User data", content_type = "application/json"),
         (status = UNAUTHORIZED, description = "User isn't logged in"),
@@ -96,7 +96,7 @@ async fn get_user(auth: AuthExtractor) -> impl Responder {
 
 #[utoipa::path(
     context_path = "/user",
-    tag = "user_admin",
+    tag = "User Admin",
     responses(
         (status = OK, body = UserBody, description = "User data", content_type = "application/json"),
         (status = NOT_FOUND, description = "User don't exist"),
@@ -124,7 +124,7 @@ async fn get_user_by_id(
 
 #[utoipa::path(
     context_path = "/user",
-    tag = "user_admin",
+    tag = "User Admin",
     request_body(content = UserBody,
         content_type = "application/json", 
         description = "Modify user",
@@ -172,7 +172,7 @@ async fn modify_by_id(
 
 #[utoipa::path(
     context_path = "/user",
-    tag = "user_admin",
+    tag = "User Admin",
     responses(
         (status = CREATED, description = "User modified successfully"),
         (status = NOT_FOUND, description = "User don't exist"),
