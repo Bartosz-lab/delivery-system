@@ -59,7 +59,7 @@ async fn main() -> Result<(), impl Error> {
                     .configure(auth::app::api::users::config),
             )
             .service(
-                web::scope("/tradeparner")
+                web::scope("/tradepartner")
                     .wrap(NormalizePath::trim())
                     .configure(delivery::app::api::trade_partner::config),
             )

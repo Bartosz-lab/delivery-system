@@ -9,10 +9,10 @@ use crate::delivery::domain::value_objects::ParcelSize;
 use crate::delivery::domain::TradePartner;
 
 #[utoipa::path(
-    context_path = "/tradeparner",
-    tag = "Trade Parner",
+    context_path = "/tradepartner",
+    tag = "Trade Partner",
     responses(
-        (status = OK, body = TradePartnerListBody, description = "Trade Parner list", content_type = "application/json"),
+        (status = OK, body = TradePartnerListBody, description = "Trade Partner list", content_type = "application/json"),
         (status = UNAUTHORIZED, description = "User isn't logged in"),
         (status = FORBIDDEN, description = "User don't have permissions"),
     )
@@ -28,7 +28,7 @@ async fn get_trade_partner(_: AuthExtractor, extractor: TradePartnerExtractor) -
 }
 
 #[utoipa::path(
-    context_path = "/tradeparner",
+    context_path = "/tradepartner",
     tag = "Price List",
     responses(
         (status = OK, body = PriceListBody, description = "Price List for Trade Partner", content_type = "application/json"),
@@ -60,7 +60,7 @@ async fn get_price_list(_: AuthExtractor, extractor: TradePartnerExtractor) -> i
 }
 
 #[utoipa::path(
-    context_path = "/tradeparner",
+    context_path = "/tradepartner",
     tag = "Price List",
     params(
         ("size" = ParcelSize, Path, description = "Size of parcel"),
