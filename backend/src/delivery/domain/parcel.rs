@@ -1,5 +1,7 @@
 use chrono::NaiveDate;
 
+use crate::delivery::domain::value_objects::ParcelSize;
+
 #[derive(Clone)]
 pub struct Parcel {
     pub id: usize,
@@ -9,6 +11,7 @@ pub struct Parcel {
     pub recipient_address_id: usize,
     pub warehouse_id: usize,
     pub pickup_date: NaiveDate,
+    pub size: ParcelSize,
 }
 
 impl Parcel {
@@ -19,6 +22,7 @@ impl Parcel {
         recipient_address_id: usize,
         warehouse_id: usize,
         pickup_date: NaiveDate,
+        size: ParcelSize,
     ) -> Self {
         Parcel {
             id: 0,
@@ -28,6 +32,7 @@ impl Parcel {
             recipient_address_id,
             warehouse_id,
             pickup_date,
+            size,
         }
     }
 }

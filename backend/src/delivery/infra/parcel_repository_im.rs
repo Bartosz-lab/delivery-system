@@ -1,7 +1,6 @@
-use crate::delivery::domain::repository::ParcelTrait;
-use crate::delivery::domain::Parcel;
-use chrono::NaiveDate;
+use crate::delivery::domain::{repository::ParcelTrait, value_objects::ParcelSize, Parcel};
 
+use chrono::NaiveDate;
 use std::sync::Mutex;
 
 struct ParcelRepository {
@@ -18,15 +17,17 @@ lazy_static! {
             3,
             1,
             NaiveDate::from_ymd_opt(2023, 5, 28).unwrap(),
+            ParcelSize::S,
         );
         parcel1.id = 1;
         let mut parcel2 = Parcel::new(
-            "Jan Kowalski".to_string(),
-            "jan.kowalski@example.net".to_string(),
+            "Anna Nowak".to_string(),
+            "anna.nowak@example.net".to_string(),
             "123456789".to_string(),
             4,
             1,
             NaiveDate::from_ymd_opt(2023, 5, 28).unwrap(),
+            ParcelSize::M,
         );
         parcel2.id = 2;
         Mutex::new(ParcelRepository {
