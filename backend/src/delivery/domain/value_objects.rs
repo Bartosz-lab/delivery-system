@@ -4,6 +4,19 @@ use std::collections::HashMap;
 use utoipa::ToSchema;
 
 #[derive(PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema, Clone)]
+pub enum ParcelStatus {
+    ToCollect,
+    Collected,
+    InTransport,
+    InTerminal(String),        // Terminal Name
+    ExpectedDelivery(String),  // Date as string in format dd-mm-yyyy
+    RequestedDelivery(String), // Date as string in format dd-mm-yyyy
+    InDelivery,
+    ChangedAddress(usize), //old address id
+    Delivered,
+}
+
+#[derive(PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema, Clone)]
 pub enum ParcelSize {
     S,
     M,
