@@ -59,13 +59,31 @@ impl WarehouseTrait for Warehouse {
         }
     }
 
-    fn find_by_trade_partner(address_id: usize) -> Vec<Warehouse> {
+    fn find_by_trade_partner(trade_partner_id: usize) -> Vec<Warehouse> {
         let list = &DATA.lock().unwrap().list;
 
         list.into_iter()
-            .filter(|warehouse| warehouse.trade_partner_id == address_id)
+            .filter(|warehouse| warehouse.trade_partner_id == trade_partner_id)
             .map(|warehouse| warehouse.clone())
             .collect::<Vec<Warehouse>>()
+    }
+
+    fn find_by_trade_partner_and_id(
+        trade_partner_id: usize,
+        warehouse_id: usize,
+    ) -> Option<Warehouse> {
+        let list = &DATA.lock().unwrap().list;
+
+        match list
+            .into_iter()
+            .filter(|warehouse| warehouse.trade_partner_id == trade_partner_id)
+            .enumerate()
+            .filter(|(id, _)| *id == warehouse_id)
+            .next()
+        {
+            None => None,
+            Some((_, warehouse)) => Some(warehouse.clone()),
+        }
     }
 
     fn get_all() -> Vec<Warehouse> {

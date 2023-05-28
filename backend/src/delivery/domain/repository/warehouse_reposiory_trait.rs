@@ -11,5 +11,7 @@ pub trait WarehouseTrait {
 
     fn find_by_trade_partner(trade_partner_id: usize) -> Vec<Warehouse>;
 
+    fn find_by_trade_partner_and_id(trade_partner_id: usize, id: usize) -> Option<Warehouse>;
+
     fn get_all() -> Vec<Warehouse>;
 }

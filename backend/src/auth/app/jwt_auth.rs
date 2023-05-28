@@ -94,6 +94,32 @@ impl FromRequest for AdminExtractor {
     }
 }
 
+pub struct CourierExtractor;
+
+impl FromRequest for CourierExtractor {
+    type Error = ActixWebError;
+    type Future = Ready<Result<Self, Self::Error>>;
+    fn from_request(req: &HttpRequest, _: &mut Payload) -> Self::Future {
+        match req.extensions().get::<ClaimsData>() {
+            None => ready(Err(ErrorUnauthorized(
+                "You are not logged in, please provide Token",
+            ))),
+            Some(user) => {
+                if user.roles.iter().any(|role| match role {
+                    Role::Admin | Role::Courier => true,
+                    _ => false,
+                }) {
+                    ready(Ok(CourierExtractor))
+                } else {
+                    ready(Err(ErrorForbidden(
+                        "You are not have access to this endpoint",
+                    )))
+                }
+            }
+        }
+    }
+}
+
 pub struct TradePartnerExtractor {
     pub trade_partner_id: usize,
 }
@@ -123,6 +149,50 @@ impl FromRequest for TradePartnerExtractor {
                         Role::PartnerUser(id) => ready(Ok(TradePartnerExtractor {
                             trade_partner_id: *id,
                         })),
+                        _ => ready(Err(ErrorForbidden(
+                            "You are not have access to this endpoint",
+                        ))),
+                    },
+
+                    None => ready(Err(ErrorForbidden(
+                        "You are not have access to this endpoint",
+                    ))),
+                }
+            }
+        }
+    }
+}
+pub struct TradePartnerApiExtractor {
+    pub trade_partner_id: usize,
+}
+
+impl FromRequest for TradePartnerApiExtractor {
+    type Error = ActixWebError;
+    type Future = Ready<Result<Self, Self::Error>>;
+    fn from_request(req: &HttpRequest, _: &mut Payload) -> Self::Future {
+        let binding = req.extensions();
+        let user_opt = binding.get::<ClaimsData>();
+
+        match user_opt {
+            None => ready(Err(ErrorUnauthorized(
+                "You are not logged in, please provide Token",
+            ))),
+            Some(user) => {
+                let role_opt = user
+                    .roles
+                    .iter()
+                    .filter(|role| match role {
+                        Role::PartnerUser(_) | Role::PartnerApi(_) => true,
+                        _ => false,
+                    })
+                    .next();
+                match role_opt {
+                    Some(role) => match role {
+                        Role::PartnerUser(id) | Role::PartnerApi(id) => {
+                            ready(Ok(TradePartnerApiExtractor {
+                                trade_partner_id: *id,
+                            }))
+                        }
                         _ => ready(Err(ErrorForbidden(
                             "You are not have access to this endpoint",
                         ))),
