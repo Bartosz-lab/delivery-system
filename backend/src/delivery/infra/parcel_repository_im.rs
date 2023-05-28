@@ -15,7 +15,7 @@ lazy_static! {
             "jan.kowalski@example.net".to_string(),
             "123456789".to_string(),
             3,
-            1,
+            3,
             NaiveDate::from_ymd_opt(2023, 5, 28).unwrap(),
             ParcelSize::S,
         );
@@ -25,7 +25,7 @@ lazy_static! {
             "anna.nowak@example.net".to_string(),
             "123456789".to_string(),
             4,
-            1,
+            3,
             NaiveDate::from_ymd_opt(2023, 5, 28).unwrap(),
             ParcelSize::M,
         );
@@ -80,6 +80,25 @@ impl ParcelTrait for Parcel {
 
         list.into_iter()
             .filter(|parcel| parcel.warehouse_id == warehouse_id)
+            .map(|parcel| parcel.clone())
+            .collect::<Vec<Parcel>>()
+    }
+
+    fn find_by_date_and_warehouse_id(
+        start_date: NaiveDate,
+        end_date: NaiveDate,
+        warehouse_id: usize,
+        size: ParcelSize,
+    ) -> Vec<Parcel> {
+        let list = &DATA.lock().unwrap().list;
+
+        list.into_iter()
+            .filter(|parcel| {
+                parcel.warehouse_id == warehouse_id
+                    && parcel.pickup_date >= start_date
+                    && parcel.pickup_date <= end_date
+                    && parcel.size == size
+            })
             .map(|parcel| parcel.clone())
             .collect::<Vec<Parcel>>()
     }

@@ -1,6 +1,7 @@
 mod address;
 mod parcel;
 pub mod repository;
+pub mod service;
 mod status_record;
 mod trade_partner;
 pub(super) mod value_objects;

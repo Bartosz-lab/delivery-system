@@ -15,6 +15,9 @@ lazy_static! {
         status_record1.id = 1;
         let mut status_record2 = StatusRecord::new(1, ParcelStatus::Collected);
         status_record2.id = 2;
+        let mut status_record2 =
+            StatusRecord::new(1, ParcelStatus::ExpectedDelivery("28-05-2023".to_string()));
+        status_record2.id = 3;
         Mutex::new(StatusRecordRepository {
             list: vec![status_record1, status_record2],
             last_id: 10,
@@ -65,6 +68,15 @@ impl StatusRecordTrait for StatusRecord {
 
         list.into_iter()
             .filter(|status_record| status_record.parcel_id == parcel_id)
+            .map(|status_record| status_record.clone())
+            .collect::<Vec<StatusRecord>>()
+    }
+
+    fn find_by_status(status: ParcelStatus) -> Vec<StatusRecord> {
+        let list = &DATA.lock().unwrap().list;
+
+        list.into_iter()
+            .filter(|status_record| status_record.status == status)
             .map(|status_record| status_record.clone())
             .collect::<Vec<StatusRecord>>()
     }

@@ -1,3 +1,4 @@
+use crate::delivery::domain::value_objects::ParcelStatus;
 use crate::delivery::domain::StatusRecord;
 
 pub trait StatusRecordTrait {
@@ -10,4 +11,6 @@ pub trait StatusRecordTrait {
     fn find_by_id(id: usize) -> Option<StatusRecord>;
 
     fn find_by_parcel_id(parcel_id: usize) -> Vec<StatusRecord>;
+
+    fn find_by_status(status: ParcelStatus) -> Vec<StatusRecord>;
 }

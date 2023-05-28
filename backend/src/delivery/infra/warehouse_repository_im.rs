@@ -64,7 +64,12 @@ impl WarehouseTrait for Warehouse {
 
         list.into_iter()
             .filter(|warehouse| warehouse.trade_partner_id == trade_partner_id)
-            .map(|warehouse| warehouse.clone())
+            .enumerate()
+            .map(|(id, warehouse)| {
+                let mut new = warehouse.clone();
+                new.id = id;
+                new.clone()
+            })
             .collect::<Vec<Warehouse>>()
     }
 

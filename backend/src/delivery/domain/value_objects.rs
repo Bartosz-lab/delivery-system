@@ -16,11 +16,18 @@ pub enum ParcelStatus {
     Delivered,
 }
 
-#[derive(PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema, Clone)]
+#[derive(PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema, Clone, Copy)]
 pub enum ParcelSize {
     S,
     M,
     L,
+}
+impl ParcelSize {
+    pub fn iterator() -> impl Iterator<Item = ParcelSize> {
+        [ParcelSize::S, ParcelSize::M, ParcelSize::L]
+            .iter()
+            .copied()
+    }
 }
 
 #[derive(Clone)]

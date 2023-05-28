@@ -39,6 +39,7 @@ async fn main() -> Result<(), impl Error> {
     ];
     swagger_urls.append(delivery::app::api::trade_partner::swagger_urls().as_mut());
     swagger_urls.append(delivery::app::api::parcel::swagger_urls().as_mut());
+    swagger_urls.append(delivery::app::api::report::swagger_urls().as_mut());
 
     println!("🚀 Server started successfully");
 
@@ -68,6 +69,11 @@ async fn main() -> Result<(), impl Error> {
                 web::scope("/parcel")
                     .wrap(NormalizePath::trim())
                     .configure(delivery::app::api::parcel::config),
+            )
+            .service(
+                web::scope("/report")
+                    .wrap(NormalizePath::trim())
+                    .configure(delivery::app::api::report::config),
             )
     })
     .bind(("127.0.0.1", 8080))?
