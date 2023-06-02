@@ -7,6 +7,7 @@ use actix_web::{
 use chrono::{prelude::*, Duration};
 use jsonwebtoken::{encode, EncodingKey, Header};
 use utoipa::OpenApi;
+use utoipa_swagger_ui::Url;
 
 use crate::auth::app::{AuthExtractor, ClaimsData, TokenClaims};
 use crate::auth::domain::{
@@ -20,10 +21,24 @@ use structs::{ChangePassBody, LoginBody};
 
 #[derive(OpenApi)]
 #[openapi(
+    info(
+        title = "Authenticate",
+        description = "API for autenticate in this API",
+        license(name = "MIT"),
+        version = "1.0.0"
+    ),
     paths(login, logout, changepass),
-    components(schemas(LoginBody, ChangePassBody))
+    components(schemas(LoginBody, ChangePassBody)),
+    tags(
+        (name = "Auth", description = "Authenticate endpoints"),
+        (name = "Other", description = "Other endpoints"),
+    )
 )]
 pub struct ApiDoc;
+
+pub fn swagger_urls() -> Vec<(Url<'static>, utoipa::openapi::OpenApi)> {
+    vec![(Url::new("Auth", "/api-docs/auth.json"), ApiDoc::openapi())]
+}
 
 pub fn config(cfg: &mut web::ServiceConfig) {
     cfg.service(login).service(logout).service(changepass);
@@ -98,7 +113,7 @@ async fn logout(_: AuthExtractor) -> impl Responder {
 
 #[utoipa::path(
     context_path = "/auth",
-    tag = "Auth",
+    tag = "Other",
     request_body(content = ChangePassBody,
         content_type = "application/json", 
         description = "New password",

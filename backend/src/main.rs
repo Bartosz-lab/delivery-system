@@ -7,8 +7,7 @@ use actix_web::{
 };
 use dotenv::dotenv;
 use std::error::Error;
-use utoipa::OpenApi;
-use utoipa_swagger_ui::{SwaggerUi, Url};
+use utoipa_swagger_ui::SwaggerUi;
 
 mod auth;
 mod config;
@@ -27,10 +26,8 @@ async fn main() -> Result<(), impl Error> {
 
     let config = Config::init();
 
-    let mut swagger_urls = vec![(
-        Url::new("auth", "/api-docs/auth.json"),
-        auth::app::api::auth::ApiDoc::openapi(),
-    )];
+    let mut swagger_urls = Vec::new();
+    swagger_urls.append(auth::app::api::auth::swagger_urls().as_mut());
     swagger_urls.append(auth::app::api::users::swagger_urls().as_mut());
     swagger_urls.append(delivery::app::api::trade_partner::swagger_urls().as_mut());
     swagger_urls.append(delivery::app::api::parcel::swagger_urls().as_mut());
