@@ -2,6 +2,7 @@ use actix_web::web;
 use utoipa::OpenApi;
 use utoipa_swagger_ui::Url;
 
+use crate::delivery::app::api::structs::AddressBody;
 use crate::delivery::domain::value_objects::ParcelSize;
 
 mod admin_views;
@@ -9,7 +10,7 @@ mod gets;
 mod trade_partner_views;
 
 mod structs;
-use structs::{AddressBody, MoneyBody, TradePartnerAdminBody, TradePartnerBody, WarehouseBody};
+use structs::{MoneyBody, TradePartnerAdminBody, TradePartnerBody, WarehouseBody};
 
 #[derive(OpenApi)]
 #[openapi(
@@ -54,7 +55,7 @@ struct ApiDocAdmin;
 #[derive(OpenApi)]
 #[openapi(
     info(
-        title = "Trade Oarner Informations",
+        title = "Trade Parner Informations",
         description = "API for Administration App",
         license(name = "MIT"),
         version = "1.0.0"

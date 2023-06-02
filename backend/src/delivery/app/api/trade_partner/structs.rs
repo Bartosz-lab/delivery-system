@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
+use crate::delivery::app::api::structs::AddressBody;
+
 #[derive(Serialize, Deserialize, ToSchema)]
 #[schema(title = "TradePartner")]
 pub struct TradePartnerBody {
@@ -37,18 +39,4 @@ pub struct WarehouseBody {
     #[schema(default = "_")]
     pub name: Option<String>,
     pub address: Option<AddressBody>,
-}
-
-#[derive(Clone, Serialize, Deserialize, ToSchema)]
-#[schema(title = "Address")]
-pub struct AddressBody {
-    #[schema(example = "ul. Piękna 1a")]
-    #[schema(default = "_")]
-    pub street: Option<String>,
-    #[schema(example = "Wrocław")]
-    #[schema(default = "_")]
-    pub city: Option<String>,
-    #[schema(example = "50-100")]
-    #[schema(default = "_")]
-    pub postal_code: Option<String>,
 }

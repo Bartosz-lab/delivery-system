@@ -1,7 +1,8 @@
 use actix_web::HttpResponse;
 
-use crate::delivery::app::api::trade_partner::structs::{
-    AddressBody, MoneyBody, TradePartnerBody, WarehouseBody,
+use crate::delivery::app::api::{
+    structs::AddressBody,
+    trade_partner::structs::{MoneyBody, TradePartnerBody, WarehouseBody},
 };
 use crate::delivery::domain::repository::{AddressTrait, WarehouseTrait};
 use crate::delivery::domain::value_objects::ParcelSize;

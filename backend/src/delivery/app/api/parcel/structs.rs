@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
+use crate::delivery::app::api::structs::AddressRequired;
 use crate::delivery::domain::value_objects::{ParcelSize, ParcelStatus};
 
 #[derive(Serialize, Deserialize, ToSchema)]
@@ -18,7 +19,7 @@ pub struct ParcelBody {
     pub recipient_email: String,
     #[schema(example = "123456789")]
     pub recipient_phone: String,
-    pub recipient_address: AddressBody,
+    pub recipient_address: AddressRequired,
     #[schema(example = "28-05-2023")]
     pub pickup_date: String,
     #[schema(example = ParcelSize::L)]
@@ -34,7 +35,7 @@ pub struct ParcelRequest {
     pub recipient_email: String,
     #[schema(example = "123456789")]
     pub recipient_phone: String,
-    pub recipient_address: AddressBody,
+    pub recipient_address: AddressRequired,
     #[schema(example = 1)]
     pub warehouse_id: usize,
     #[schema(example = "28-05-2023")]
@@ -43,28 +44,9 @@ pub struct ParcelRequest {
     pub size: ParcelSize,
 }
 
-#[derive(Clone, Serialize, Deserialize, ToSchema)]
-pub struct AddressBody {
-    #[schema(example = "ul. Piękna 1a")]
-    #[schema(default = "_")]
-    pub street: String,
-    #[schema(example = "Wrocław")]
-    #[schema(default = "_")]
-    pub city: String,
-    #[schema(example = "50-100")]
-    #[schema(default = "_")]
-    pub postal_code: String,
-}
-
-#[derive(Serialize, ToSchema)]
-pub struct AddResponse {
-    #[schema(example = 1)]
-    pub id: usize,
-}
-
 #[derive(Serialize, Deserialize, ToSchema)]
 pub struct ModifyParcelRequest {
-    pub address: AddressBody,
+    pub address: Option<AddressRequired>,
     #[schema(example = "28-05-2023")]
-    pub requested_date: String,
+    pub requested_date: Option<String>,
 }

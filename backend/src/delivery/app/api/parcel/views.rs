@@ -3,8 +3,9 @@ use chrono::NaiveDate;
 
 use crate::auth::app::{AuthExtractor, CourierExtractor, TradePartnerApiExtractor};
 use crate::delivery::app::api::parcel::structs::{
-    AddResponse, AddressBody, ModifyParcelRequest, ParcelBody, ParcelRequest, StatusBody,
+    ModifyParcelRequest, ParcelBody, ParcelRequest, StatusBody,
 };
+use crate::delivery::app::api::structs::AddressRequired;
 use crate::delivery::domain::repository::{
     AddressTrait, ParcelTrait, StatusRecordTrait, WarehouseTrait,
 };
@@ -33,7 +34,7 @@ async fn get_parcel(path: web::Path<usize>) -> impl Responder {
                 recipient_phone: parcel.recipient_phone,
                 pickup_date: parcel.pickup_date.format("%d-%m-%Y").to_string(),
                 size: parcel.size,
-                recipient_address: AddressBody {
+                recipient_address: AddressRequired {
                     street: address.street,
                     city: address.city,
                     postal_code: address.postal_code,
@@ -55,13 +56,13 @@ async fn get_parcel(path: web::Path<usize>) -> impl Responder {
 
 #[utoipa::path(
     context_path = "/parcel",
-    tag = "Trade Partner",
+    tag = "Trade Partner API",
     request_body(content = ParcelRequest,
         content_type = "application/json",
         description = "Add new Parcel",
     ),
     responses(
-        (status = CREATED, body = AddResponse, description = "Parcel created successfully", content_type = "application/json"),
+        (status = CREATED, body = usize, description = "Parcel created successfully", content_type = "application/json"),
         (status = BAD_REQUEST, description = "Parcel not created due to invalid data"),
         (status = UNAUTHORIZED, description = "User isn't logged in"),
         (status = FORBIDDEN, description = "User don't have permissions"),
@@ -93,7 +94,7 @@ async fn add_parcel(
             body.size.clone(),
         )) {
             None => HttpResponse::BadRequest().finish(),
-            Some(id) => HttpResponse::Created().json(AddResponse { id }),
+            Some(id) => HttpResponse::Created().json(id),
         },
         (_, _, _) => HttpResponse::BadRequest().finish(),
     }
@@ -101,7 +102,7 @@ async fn add_parcel(
 
 #[utoipa::path(
     context_path = "/parcel",
-    tag = "Trade Partner",
+    tag = "Parcel Status",
     request_body(content = ParcelStatus,
         content_type = "application/json",
         description = "Add new Parcel",
@@ -114,7 +115,7 @@ async fn add_parcel(
     )
 )]
 #[post("/{parcel_id}/status")]
-async fn add_status(
+async fn courier_add_status(
     path: web::Path<usize>,
     parcel_status: Json<ParcelStatus>,
     _: AuthExtractor,
@@ -146,14 +147,11 @@ async fn modify_parcel(path: web::Path<usize>, body: Json<ModifyParcelRequest>) 
     match Parcel::find_by_id(parcel_id) {
         None => HttpResponse::NotFound().finish(),
         Some(mut parcel) => {
-            if body.address.street != "_"
-                && body.address.city != "_"
-                && body.address.postal_code != "_"
-            {
+            if let Some(address) = &body.address {
                 match Address::insert(Address::new(
-                    body.address.street.clone(),
-                    body.address.city.clone(),
-                    body.address.postal_code.clone(),
+                    address.street.clone(),
+                    address.city.clone(),
+                    address.postal_code.clone(),
                 )) {
                     None => return HttpResponse::BadRequest().finish(),
                     Some(address_id) => {
@@ -170,14 +168,15 @@ async fn modify_parcel(path: web::Path<usize>, body: Json<ModifyParcelRequest>) 
                     }
                 }
             }
-            if body.requested_date != "_"
-                && StatusRecord::insert(StatusRecord::new(
+            if let Some(requested_date) = &body.requested_date {
+                if StatusRecord::insert(StatusRecord::new(
                     parcel_id,
-                    ParcelStatus::RequestedDelivery(body.requested_date.clone()),
+                    ParcelStatus::RequestedDelivery(requested_date.clone()),
                 ))
                 .is_none()
-            {
-                return HttpResponse::BadRequest().finish();
+                {
+                    return HttpResponse::BadRequest().finish();
+                }
             }
             HttpResponse::Ok().finish()
         }
