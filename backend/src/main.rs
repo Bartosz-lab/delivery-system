@@ -27,16 +27,11 @@ async fn main() -> Result<(), impl Error> {
 
     let config = Config::init();
 
-    let mut swagger_urls = vec![
-        (
-            Url::new("user", "/api-docs/user.json"),
-            auth::app::api::users::ApiDoc::openapi(),
-        ),
-        (
-            Url::new("auth", "/api-docs/auth.json"),
-            auth::app::api::auth::ApiDoc::openapi(),
-        ),
-    ];
+    let mut swagger_urls = vec![(
+        Url::new("user", "/api-docs/user.json"),
+        auth::app::api::users::ApiDoc::openapi(),
+    )];
+    swagger_urls.append(auth::app::api::users::swagger_urls().as_mut());
     swagger_urls.append(delivery::app::api::trade_partner::swagger_urls().as_mut());
     swagger_urls.append(delivery::app::api::parcel::swagger_urls().as_mut());
     swagger_urls.append(delivery::app::api::report::swagger_urls().as_mut());

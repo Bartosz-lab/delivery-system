@@ -1,15 +1,20 @@
 use actix_web::{delete, get, post, web, web::Json, HttpResponse, Responder};
 
-use crate::auth::app::api::users::structs::RolesResponse;
 use crate::auth::app::{AdminExtractor, AuthExtractor};
 use crate::auth::domain::repository::RoleTrait;
 use crate::auth::domain::Role;
 
 #[utoipa::path(
     context_path = "/user",
-    tag = "Role Admin",
+    tag = "Role",
     responses(
-        (status = OK, body = RolesResponse, description = "User roles", content_type = "application/json"),
+        (
+            status = OK, 
+            body = Vec<Role>, 
+            description = "User roles", 
+            content_type = "application/json", 
+            example = json![vec![Role::Admin,  Role::PartnerApi(1)]]
+        ),
         (status = NOT_FOUND, description = "User don't exist"),
         (status = UNAUTHORIZED, description = "User isn't logged in"),
         (status = FORBIDDEN, description = "User don't have permissions"),
@@ -24,13 +29,13 @@ async fn get_user_roles(
     let user_id = path.into_inner();
     match Role::get_user_roles(user_id) {
         None => HttpResponse::NotFound().finish(),
-        Some(roles) => HttpResponse::Ok().json(RolesResponse { roles }),
+        Some(roles) => HttpResponse::Ok().json(roles),
     }
 }
 
 #[utoipa::path(
     context_path = "/user",
-    tag = "Role Admin",
+    tag = "Role",
     request_body(content = Role,
         content_type = "application/json", 
         description = "Attach role to user",
@@ -57,7 +62,7 @@ async fn add_role(
 
 #[utoipa::path(
     context_path = "/user",
-    tag = "Role Admin",
+    tag = "Role",
     request_body(content = Role,
         content_type = "application/json", 
         description = "Detach role from user",
