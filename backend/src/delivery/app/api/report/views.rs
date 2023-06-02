@@ -41,7 +41,7 @@ async fn trade_partner_settlement_report(
 
 #[utoipa::path(
     context_path = "/report",
-    tag = "Settlement Report Admin",
+    tag = "Settlement Report",
     responses(
         (status = OK, body = SettlementTotalReport, description = "Settlement Report", content_type = "application/json"),
         (status = BAD_REQUEST, description = "Wrong date format"),
@@ -72,7 +72,7 @@ async fn trade_partner_settlement_report_admin(
 
 #[utoipa::path(
     context_path = "/report",
-    tag = "Parcel Report Admin",
+    tag = "Parcel Report",
     responses(
         (status = OK, body = ParcelTotalReport, description = "Parcels to collect Report", content_type = "application/json"),
         (status = BAD_REQUEST, description = "Wrong date format"),
@@ -95,7 +95,7 @@ async fn collect_report(
 
 #[utoipa::path(
     context_path = "/report",
-    tag = "Parcel Report Admin",
+    tag = "Parcel Report",
     responses(
         (status = OK, body = ParcelTotalReport, description = "Parcels to delivery Report", content_type = "application/json"),
         (status = BAD_REQUEST, description = "Wrong date format"),

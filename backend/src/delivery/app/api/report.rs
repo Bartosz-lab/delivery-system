@@ -15,6 +15,12 @@ mod views;
 
 #[derive(OpenApi)]
 #[openapi(
+    info(
+        title = "Courier Reports",
+        description = "API for Administration App",
+        license(name = "MIT"),
+        version = "1.0.0"
+    ),
     paths(
         views::trade_partner_settlement_report_admin,
         views::collect_report,
@@ -32,12 +38,22 @@ mod views;
         DeliveryReport,
         ParcelBody,
         AddressBody
-    ))
+    )),
+    tags(
+        (name = "Settlement Report", description = "Report about Settlement"),
+        (name = "Parcel Report", description = "Report about Parcels"),
+    )
 )]
 struct ApiDocAdmin;
 
 #[derive(OpenApi)]
 #[openapi(
+    info(
+        title = "Trade Parner Reports",
+        description = "API for Administration App",
+        license(name = "MIT"),
+        version = "1.0.0"
+    ),
     paths(views::trade_partner_settlement_report),
     components(schemas(
         SettlementSizeReport,
@@ -45,7 +61,10 @@ struct ApiDocAdmin;
         SettlementWarehouseReport,
         MoneyBody,
         ParcelSize
-    ))
+    )),
+    tags(
+        (name = "Settlement Report", description = "Report about Settlement"),
+    )
 )]
 struct ApiDoc;
 
