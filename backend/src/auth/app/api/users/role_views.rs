@@ -21,7 +21,7 @@ use crate::auth::domain::Role;
     )
 )]
 #[get("/{user_id}/role")]
-async fn get_user_roles(
+async fn view_admin_get_roles(
     path: web::Path<usize>,
     _: AuthExtractor,
     _: AdminExtractor,
@@ -48,7 +48,7 @@ async fn get_user_roles(
     )
 )]
 #[post("/{user_id}/role")]
-async fn add_role(
+async fn view_admin_add_role(
     role: Json<Role>,
     path: web::Path<usize>,
     _: AuthExtractor,
@@ -75,7 +75,7 @@ async fn add_role(
     )
 )]
 #[delete("/{user_id}/role")]
-async fn del_role(
+async fn view_admin_delete_role(
     role: Json<Role>,
     path: web::Path<usize>,
     _: AuthExtractor,
