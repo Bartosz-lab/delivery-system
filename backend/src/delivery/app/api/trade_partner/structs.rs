@@ -1,9 +1,8 @@
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
-use crate::delivery::domain::{value_objects::ParcelSize, Address};
-
 #[derive(Serialize, Deserialize, ToSchema)]
+#[schema(title = "TradePartner")]
 pub struct TradePartnerBody {
     #[schema(example = "Y-Kom sp. z o.o.")]
     #[schema(default = "_")]
@@ -11,6 +10,7 @@ pub struct TradePartnerBody {
 }
 
 #[derive(Serialize, Deserialize, ToSchema)]
+#[schema(title = "TradePartnerAdmin")]
 pub struct TradePartnerAdminBody {
     #[schema(example = 1)]
     pub id: usize,
@@ -20,23 +20,7 @@ pub struct TradePartnerAdminBody {
 }
 
 #[derive(Serialize, Deserialize, ToSchema)]
-pub struct TradePartnerListBody {
-    pub list: Vec<TradePartnerAdminBody>,
-}
-
-#[derive(Serialize, ToSchema)]
-pub struct AddResponse {
-    #[schema(example = 1)]
-    pub id: usize,
-}
-
-#[derive(Serialize, Deserialize, ToSchema)]
-pub struct PriceListBody {
-    #[schema(example = json![vec![(ParcelSize::L, "100.00")]])]
-    pub list: Vec<(ParcelSize, MoneyBody)>,
-}
-
-#[derive(Serialize, Deserialize, ToSchema)]
+#[schema(title = "Money")]
 pub struct MoneyBody {
     #[schema(example = "100.00")]
     pub price: String,
@@ -45,33 +29,26 @@ pub struct MoneyBody {
 }
 
 #[derive(Serialize, Deserialize, ToSchema)]
-pub struct WarehouseAdminBody {
-    #[schema(example = 1)]
-    pub id: usize,
-    #[schema(example = "Magazyn 1")]
-    pub name: String,
-    #[schema(example = 1)]
-    pub trade_partner_id: usize,
-    pub address: Address,
-}
-
-#[derive(Serialize, Deserialize, ToSchema)]
+#[schema(title = "Warehouse")]
 pub struct WarehouseBody {
+    #[schema(example = 1)]
+    pub id: Option<usize>,
     #[schema(example = "Magazyn 1")]
     #[schema(default = "_")]
-    pub name: String,
-    pub address: AddressBody,
+    pub name: Option<String>,
+    pub address: Option<AddressBody>,
 }
 
 #[derive(Clone, Serialize, Deserialize, ToSchema)]
+#[schema(title = "Address")]
 pub struct AddressBody {
     #[schema(example = "ul. Piękna 1a")]
     #[schema(default = "_")]
-    pub street: String,
+    pub street: Option<String>,
     #[schema(example = "Wrocław")]
     #[schema(default = "_")]
-    pub city: String,
+    pub city: Option<String>,
     #[schema(example = "50-100")]
     #[schema(default = "_")]
-    pub postal_code: String,
+    pub postal_code: Option<String>,
 }

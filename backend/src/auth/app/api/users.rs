@@ -37,6 +37,12 @@ pub struct ApiDocAdmin;
 
 #[derive(OpenApi)]
 #[openapi(
+    info(
+        title = "User Informations",
+        description = "API for Administration App",
+        license(name = "MIT"),
+        version = "1.0.0"
+    ),
     paths(user_views::view_modify_user, user_views::view_get_user),
     components(schemas(UserBody)),
     tags(

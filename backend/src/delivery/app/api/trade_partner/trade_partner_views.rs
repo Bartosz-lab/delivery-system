@@ -1,12 +1,10 @@
 use actix_web::{get, web, HttpResponse, Responder};
 
 use crate::auth::app::{AuthExtractor, TradePartnerExtractor};
-use crate::delivery::app::api::trade_partner::structs::{
-    AddressBody, MoneyBody, PriceListBody, TradePartnerBody, WarehouseBody,
-};
-use crate::delivery::domain::repository::{AddressTrait, TradePartnerTrait, WarehouseTrait};
+use crate::delivery::app::api::trade_partner::gets;
+use crate::delivery::domain::repository::TradePartnerTrait;
 use crate::delivery::domain::value_objects::ParcelSize;
-use crate::delivery::domain::{Address, TradePartner, Warehouse};
+use crate::delivery::domain::TradePartner;
 
 #[utoipa::path(
     context_path = "/tradepartner",
@@ -21,9 +19,7 @@ use crate::delivery::domain::{Address, TradePartner, Warehouse};
 async fn get_trade_partner(_: AuthExtractor, extractor: TradePartnerExtractor) -> impl Responder {
     match TradePartner::find_by_id(extractor.trade_partner_id) {
         None => HttpResponse::InternalServerError().finish(),
-        Some(trade_partner) => HttpResponse::Ok().json(TradePartnerBody {
-            name: trade_partner.name,
-        }),
+        Some(trade_partner) => HttpResponse::Ok().json(gets::get_trade_partner(trade_partner)),
     }
 }
 
@@ -31,7 +27,7 @@ async fn get_trade_partner(_: AuthExtractor, extractor: TradePartnerExtractor) -
     context_path = "/tradepartner",
     tag = "Price List",
     responses(
-        (status = OK, body = PriceListBody, description = "Price List for Trade Partner", content_type = "application/json"),
+        (status = OK, body = Vec<(ParcelSize, MoneyBody)>, description = "Price List for Trade Partner", content_type = "application/json"),
         (status = UNAUTHORIZED, description = "User isn't logged in"),
         (status = FORBIDDEN, description = "User don't have permissions"),
     )
@@ -40,22 +36,7 @@ async fn get_trade_partner(_: AuthExtractor, extractor: TradePartnerExtractor) -
 async fn get_price_list(_: AuthExtractor, extractor: TradePartnerExtractor) -> impl Responder {
     match TradePartner::find_by_id(extractor.trade_partner_id) {
         None => HttpResponse::InternalServerError().finish(),
-        Some(trade_partner) => HttpResponse::Ok().json(PriceListBody {
-            list: trade_partner
-                .price_list
-                .as_vec()
-                .into_iter()
-                .map(|(size, price)| {
-                    (
-                        size,
-                        MoneyBody {
-                            price: price.amount().to_string(),
-                            currency: price.currency().to_string(),
-                        },
-                    )
-                })
-                .collect(),
-        }),
+        Some(trade_partner) => HttpResponse::Ok().json(gets::get_price_list(trade_partner)),
     }
 }
 
@@ -82,13 +63,7 @@ async fn get_price(
 
     match TradePartner::find_by_id(extractor.trade_partner_id) {
         None => HttpResponse::InternalServerError().finish(),
-        Some(trade_partner) => match trade_partner.price_list.get(size) {
-            None => HttpResponse::NotFound().finish(),
-            Some(price) => HttpResponse::Ok().json(MoneyBody {
-                price: price.amount().to_string(),
-                currency: price.currency().to_string(),
-            }),
-        },
+        Some(trade_partner) => gets::get_price(trade_partner, size),
     }
 }
 
@@ -103,23 +78,7 @@ async fn get_price(
 )]
 #[get("/warehouse")]
 async fn get_warehouse_list(_: AuthExtractor, extractor: TradePartnerExtractor) -> impl Responder {
-    HttpResponse::Ok().json(
-        Warehouse::find_by_trade_partner(extractor.trade_partner_id)
-            .into_iter()
-            .enumerate()
-            .map(|(_, warehouse)| {
-                let address = Address::find_by_id(warehouse.address_id).unwrap();
-                WarehouseBody {
-                    name: warehouse.name,
-                    address: AddressBody {
-                        street: address.street,
-                        city: address.city,
-                        postal_code: address.postal_code,
-                    },
-                }
-            })
-            .collect::<Vec<WarehouseBody>>(),
-    )
+    HttpResponse::Ok().json(gets::get_warehouse_list(extractor.trade_partner_id))
 }
 
 #[utoipa::path(
@@ -139,24 +98,5 @@ async fn get_warehouse(
     extractor: TradePartnerExtractor,
 ) -> impl Responder {
     let warehouse_id = path.into_inner();
-
-    let warehouse_opt = Warehouse::find_by_trade_partner(extractor.trade_partner_id)
-        .into_iter()
-        .enumerate()
-        .filter(|(id, _)| *id == warehouse_id)
-        .next();
-    match warehouse_opt {
-        None => HttpResponse::NotFound().finish(),
-        Some((_, warehouse)) => {
-            let address = Address::find_by_id(warehouse.address_id).unwrap();
-            HttpResponse::Ok().json(WarehouseBody {
-                name: warehouse.name,
-                address: AddressBody {
-                    street: address.street,
-                    city: address.city,
-                    postal_code: address.postal_code,
-                },
-            })
-        }
-    }
+    gets::get_warehouse(extractor.trade_partner_id, warehouse_id)
 }

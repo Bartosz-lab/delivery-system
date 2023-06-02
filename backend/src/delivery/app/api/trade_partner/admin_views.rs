@@ -3,9 +3,9 @@ use rust_decimal::{prelude::*, Decimal};
 use rusty_money::{iso, Money};
 
 use crate::auth::app::{AdminExtractor, AuthExtractor};
-use crate::delivery::app::api::trade_partner::structs::{
-    AddResponse, MoneyBody, PriceListBody, TradePartnerAdminBody, TradePartnerBody,
-    TradePartnerListBody, WarehouseAdminBody, WarehouseBody,
+use crate::delivery::app::api::trade_partner::{
+    gets,
+    structs::{MoneyBody, TradePartnerAdminBody, TradePartnerBody, WarehouseBody},
 };
 use crate::delivery::domain::repository::{AddressTrait, TradePartnerTrait, WarehouseTrait};
 use crate::delivery::domain::value_objects::ParcelSize;
@@ -13,32 +13,36 @@ use crate::delivery::domain::{Address, TradePartner, Warehouse};
 
 #[utoipa::path(
     context_path = "/tradepartner",
-    tag = "Trade Partner Admin",
+    tag = "Trade Partner",
     request_body(content = TradePartnerBody,
         content_type = "application/json", 
         description = "Create new Trade Partner",
     ),
     responses(
-        (status = CREATED, body = AddResponse, description = "Trade Partner created successfully", content_type = "application/json"),
+        (status = CREATED, body = usize, description = "Trade Partner created successfully", content_type = "application/json"),
         (status = BAD_REQUEST, description = "Trade Partner not created due to invalid data"),
         (status = UNAUTHORIZED, description = "User isn't logged in"),
         (status = FORBIDDEN, description = "User don't have permissions"),
     )
 )]
 #[post("")]
-async fn add(body: Json<TradePartnerBody>, _: AuthExtractor, _: AdminExtractor) -> impl Responder {
+async fn add_trade_parnter(
+    body: Json<TradePartnerBody>,
+    _: AuthExtractor,
+    _: AdminExtractor,
+) -> impl Responder {
     let res = TradePartner::insert(TradePartner::new(body.name.to_owned()));
     match res {
-        Some(id) => HttpResponse::Created().json(AddResponse { id }),
+        Some(id) => HttpResponse::Created().json(id),
         None => HttpResponse::BadRequest().finish(),
     }
 }
 
 #[utoipa::path(
     context_path = "/tradepartner",
-    tag = "Trade Partner Admin",
+    tag = "Trade Partner",
     responses(
-        (status = OK, body = TradePartnerListBody, description = "Trade Partner list", content_type = "application/json"),
+        (status = OK, body = Vec<TradePartnerAdminBody>, description = "Trade Partner list", content_type = "application/json"),
         (status = UNAUTHORIZED, description = "User isn't logged in"),
         (status = FORBIDDEN, description = "User don't have permissions"),
     )
@@ -46,20 +50,19 @@ async fn add(body: Json<TradePartnerBody>, _: AuthExtractor, _: AdminExtractor) 
 #[get("/list")]
 async fn get_trade_partner_list(_: AuthExtractor, _: AdminExtractor) -> impl Responder {
     let list = TradePartner::get_all();
-    HttpResponse::Ok().json(TradePartnerListBody {
-        list: list
-            .into_iter()
+    HttpResponse::Ok().json(
+        list.into_iter()
             .map(|trade_partner| TradePartnerAdminBody {
                 id: trade_partner.id,
                 name: trade_partner.name,
             })
-            .collect(),
-    })
+            .collect::<Vec<TradePartnerAdminBody>>(),
+    )
 }
 
 #[utoipa::path(
     context_path = "/tradepartner",
-    tag = "Trade Partner Admin",
+    tag = "Trade Partner",
     responses(
         (status = OK, body = TradePartnerBody, description = "Trade Partner data", content_type = "application/json"),
         (status = NOT_FOUND, description = "Trade Partner don't exist"),
@@ -76,15 +79,13 @@ async fn get_trade_partner(
     let trade_partner_id = path.into_inner();
     match TradePartner::find_by_id(trade_partner_id) {
         None => HttpResponse::NotFound().finish(),
-        Some(trade_partner) => HttpResponse::Ok().json(TradePartnerBody {
-            name: trade_partner.name,
-        }),
+        Some(trade_partner) => HttpResponse::Ok().json(gets::get_trade_partner(trade_partner)),
     }
 }
 
 #[utoipa::path(
     context_path = "/tradepartner",
-    tag = "Trade Partner Admin",
+    tag = "Trade Partner",
     request_body(content = TradePartnerBody,
         content_type = "application/json",
         description = "Modify Trade Partner",
@@ -98,7 +99,7 @@ async fn get_trade_partner(
     )
 )]
 #[put("/{trade_partner_id}")]
-async fn modify_by_id(
+async fn modify_trade_partner(
     path: web::Path<usize>,
     body: Json<TradePartnerBody>,
     _: AuthExtractor,
@@ -123,7 +124,7 @@ async fn modify_by_id(
 
 #[utoipa::path(
     context_path = "/tradepartner",
-    tag = "Trade Partner Admin",
+    tag = "Trade Partner",
     responses(
         (status = OK, description = "Trade Partner deleted successfully"),
         (status = NOT_FOUND, description = "Trade Partner don't exist"),
@@ -148,9 +149,9 @@ async fn delete_trade_partner(
 
 #[utoipa::path(
     context_path = "/tradepartner",
-    tag = "Price List Admin",
+    tag = "Price List",
     responses(
-        (status = OK, body = PriceListBody, description = "Price List for Trade Partner", content_type = "application/json"),
+        (status = OK, body = Vec<(ParcelSize, MoneyBody)>, description = "Price List for Trade Partner", content_type = "application/json"),
         (status = NOT_FOUND, description = "Trade Partner don't exist"),
         (status = UNAUTHORIZED, description = "User isn't logged in"),
         (status = FORBIDDEN, description = "User don't have permissions"),
@@ -165,28 +166,13 @@ async fn get_price_list(
     let trade_partner_id = path.into_inner();
     match TradePartner::find_by_id(trade_partner_id) {
         None => HttpResponse::NotFound().finish(),
-        Some(trade_partner) => HttpResponse::Ok().json(PriceListBody {
-            list: trade_partner
-                .price_list
-                .as_vec()
-                .into_iter()
-                .map(|(size, price)| {
-                    (
-                        size,
-                        MoneyBody {
-                            price: price.amount().to_string(),
-                            currency: price.currency().to_string(),
-                        },
-                    )
-                })
-                .collect(),
-        }),
+        Some(trade_partner) => HttpResponse::Ok().json(gets::get_price_list(trade_partner)),
     }
 }
 
 #[utoipa::path(
     context_path = "/tradepartner",
-    tag = "Price List Admin",
+    tag = "Price List",
     responses(
         (status = OK, body = MoneyBody, description = "Price of specified size", content_type = "application/json"),
         (status = NOT_FOUND, description = "Trade Partner or price don't exist"),
@@ -204,19 +190,13 @@ async fn get_price(
 
     match TradePartner::find_by_id(trade_partner_id) {
         None => HttpResponse::NotFound().finish(),
-        Some(trade_partner) => match trade_partner.price_list.get(size) {
-            None => HttpResponse::NotFound().finish(),
-            Some(price) => HttpResponse::Ok().json(MoneyBody {
-                price: price.amount().to_string(),
-                currency: price.currency().to_string(),
-            }),
-        },
+        Some(trade_partner) => gets::get_price(trade_partner, size),
     }
 }
 
 #[utoipa::path(
     context_path = "/tradepartner",
-    tag = "Price List Admin",
+    tag = "Price List",
     request_body(content = MoneyBody,
         content_type = "application/json", 
         description = "Add/Replace new Price to Price List",
@@ -267,7 +247,7 @@ async fn add_price(
 
 #[utoipa::path(
     context_path = "/tradepartner",
-    tag = "Price List Admin",
+    tag = "Price List",
     responses(
         (status = OK, description = "Price deleted successfully"),
         (status = BAD_REQUEST, description = "Price List can't be updated due to invalid data"),
@@ -299,9 +279,9 @@ async fn delete_price(
 
 #[utoipa::path(
     context_path = "/tradepartner",
-    tag = "Warehouse Admin",
+    tag = "Warehouse",
     responses(
-        (status = OK, body = Vec<WarehouseAdminBody>, description = "Warehouse List for Trade Partner", content_type = "application/json"),
+        (status = OK, body = Vec<WarehouseBody>, description = "Warehouse List for Trade Partner", content_type = "application/json"),
         (status = NOT_FOUND, description = "Trade Partner don't exist"),
         (status = UNAUTHORIZED, description = "User isn't logged in"),
         (status = FORBIDDEN, description = "User don't have permissions"),
@@ -316,24 +296,13 @@ async fn get_warehouse_list(
     let trade_partner_id = path.into_inner();
     match TradePartner::find_by_id(trade_partner_id) {
         None => HttpResponse::NotFound().finish(),
-        Some(trade_partner) => HttpResponse::Ok().json(
-            Warehouse::find_by_trade_partner(trade_partner.id)
-                .into_iter()
-                .enumerate()
-                .map(|(id, warehouse)| WarehouseAdminBody {
-                    id,
-                    name: warehouse.name,
-                    trade_partner_id: warehouse.trade_partner_id,
-                    address: Address::find_by_id(warehouse.address_id).unwrap(),
-                })
-                .collect::<Vec<WarehouseAdminBody>>(),
-        ),
+        Some(_) => HttpResponse::Ok().json(gets::get_warehouse_list(trade_partner_id)),
     }
 }
 
 #[utoipa::path(
     context_path = "/tradepartner",
-    tag = "Warehouse Admin",
+    tag = "Warehouse",
     responses(
         (status = OK, body = WarehouseAdminBody, description = "Warehouse data", content_type = "application/json"),
         (status = NOT_FOUND, description = "Warehouse don't exist"),
@@ -348,32 +317,18 @@ async fn get_warehouse(
     _: AdminExtractor,
 ) -> impl Responder {
     let (trade_partner_id, warehouse_id) = path.into_inner();
-
-    let warehouse_opt = Warehouse::find_by_trade_partner(trade_partner_id)
-        .into_iter()
-        .enumerate()
-        .filter(|(id, _)| *id == warehouse_id)
-        .next();
-    match warehouse_opt {
-        None => HttpResponse::NotFound().finish(),
-        Some((id, warehouse)) => HttpResponse::Ok().json(WarehouseAdminBody {
-            id,
-            name: warehouse.name,
-            trade_partner_id: warehouse.trade_partner_id,
-            address: Address::find_by_id(warehouse.address_id).unwrap(),
-        }),
-    }
+    gets::get_warehouse(trade_partner_id, warehouse_id)
 }
 
 #[utoipa::path(
     context_path = "/tradepartner",
-    tag = "Warehouse Admin",
+    tag = "Warehouse",
     request_body(content = WarehouseBody,
         content_type = "application/json",
         description = "Add new Warehouse for Trade Partner",
     ),
     responses(
-        (status = CREATED,  body = AddResponse, description = "Warehouse created successfully", content_type = "application/json"),
+        (status = CREATED,  body = usize, description = "Warehouse created successfully", content_type = "application/json"),
         (status = BAD_REQUEST, description = "Warehouse can't be created due to invalid data"),
         (status = NOT_FOUND, description = "Trade Partner don't exist"),
         (status = UNAUTHORIZED, description = "User isn't logged in"),
@@ -387,42 +342,51 @@ async fn add_warehouse(
     _: AuthExtractor,
     _: AdminExtractor,
 ) -> impl Responder {
-    let trade_partner_id = path.into_inner();
-
-    match TradePartner::find_by_id(trade_partner_id) {
-        None => HttpResponse::NotFound().finish(),
-        Some(_) => {
-            // There should be data validation
-            match Address::insert(Address::new(
-                body.address.street.clone(),
-                body.address.city.clone(),
-                body.address.postal_code.clone(),
-            )) {
-                None => HttpResponse::BadRequest().finish(),
-                Some(address_id) => {
-                    match Warehouse::insert(Warehouse::new(
-                        body.name.clone(),
-                        trade_partner_id,
-                        address_id,
-                    )) {
-                        None => HttpResponse::BadRequest().finish(),
-                        Some(id) => HttpResponse::Created().json(AddResponse { id }),
-                    }
+    fn add(
+        trade_partner_id: usize,
+        name: String,
+        street: String,
+        city: String,
+        postal_code: String,
+    ) -> HttpResponse {
+        match Address::insert(Address::new(
+            street.clone(),
+            city.clone(),
+            postal_code.clone(),
+        )) {
+            None => HttpResponse::BadRequest().finish(),
+            Some(address_id) => {
+                match Warehouse::insert(Warehouse::new(name.clone(), trade_partner_id, address_id))
+                {
+                    None => HttpResponse::BadRequest().finish(),
+                    Some(id) => HttpResponse::Created().json(id),
                 }
             }
         }
+    }
+
+    let trade_partner_id = path.into_inner();
+
+    match (body.name.clone(), body.address.clone()) {
+        (Some(name), Some(address)) => match (address.street, address.city, address.postal_code) {
+            (Some(street), Some(city), Some(postal_code)) => {
+                add(trade_partner_id, name, street, city, postal_code)
+            }
+            (_, _, _) => HttpResponse::BadRequest().finish(),
+        },
+        (_, _) => HttpResponse::BadRequest().finish(),
     }
 }
 
 #[utoipa::path(
     context_path = "/tradepartner",
-    tag = "Warehouse Admin",
+    tag = "Warehouse",
     request_body(content = WarehouseBody,
         content_type = "application/json",
         description = "Modify Warehouse for Trade Partner",
     ),
     responses(
-        (status = CREATED,  body = AddResponse, description = "Warehouse updated successfully", content_type = "application/json"),
+        (status = OK,  description = "Warehouse updated successfully"),
         (status = BAD_REQUEST, description = "Warehouse can't be updated due to invalid data"),
         (status = NOT_FOUND, description = "Warehouse don't exist"),
         (status = UNAUTHORIZED, description = "User isn't logged in"),
@@ -438,48 +402,48 @@ async fn modify_warehouse(
 ) -> impl Responder {
     let (trade_partner_id, warehouse_id) = path.into_inner();
 
-    let warehouse_opt = Warehouse::find_by_trade_partner(trade_partner_id)
+    if let Some((_, mut warehouse)) = Warehouse::find_by_trade_partner(trade_partner_id)
         .into_iter()
         .enumerate()
         .filter(|(id, _)| *id == warehouse_id)
-        .next();
-    match warehouse_opt {
-        None => HttpResponse::NotFound().finish(),
-        Some((_, mut warehouse)) => {
+        .next()
+    {
+        if let Some(body_address) = &body.address {
             let address = Address::find_by_id(warehouse.address_id);
             if address.is_none() {
                 return HttpResponse::InternalServerError().finish();
             }
             let mut address = address.unwrap();
 
-            if body.address.street != "_" {
-                address.street = body.address.street.clone()
+            if let Some(street) = &body_address.street {
+                address.street = street.clone()
             }
-            if body.address.city != "_" {
-                address.city = body.address.city.clone()
+            if let Some(city) = &body_address.city {
+                address.city = city.clone()
             }
-            if body.address.postal_code != "_" {
-                address.postal_code = body.address.postal_code.clone()
+            if let Some(postal_code) = &body_address.postal_code {
+                address.postal_code = postal_code.clone()
             }
             if !Address::save(address) {
                 return HttpResponse::BadRequest().finish();
             }
-
-            if body.name != "_" {
-                warehouse.name = body.name.clone()
-            }
-            if Warehouse::save(warehouse) {
-                HttpResponse::Ok().finish()
-            } else {
-                HttpResponse::BadRequest().finish()
-            }
         }
+        if let Some(name) = &body.name {
+            warehouse.name = name.clone()
+        }
+        if Warehouse::save(warehouse) {
+            HttpResponse::Ok().finish()
+        } else {
+            HttpResponse::BadRequest().finish()
+        }
+    } else {
+        HttpResponse::NotFound().finish()
     }
 }
 
 #[utoipa::path(
     context_path = "/tradepartner",
-    tag = "Warehouse Admin",
+    tag = "Warehouse",
     responses(
         (status = OK, description = "Warehouse deleted successfully"),
         (status = NOT_FOUND, description = "Warehouse don't exist"),

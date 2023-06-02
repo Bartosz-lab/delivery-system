@@ -2,24 +2,28 @@ use actix_web::web;
 use utoipa::OpenApi;
 use utoipa_swagger_ui::Url;
 
-use crate::delivery::domain::{value_objects::ParcelSize, Address};
+use crate::delivery::domain::value_objects::ParcelSize;
 
 mod admin_views;
+mod gets;
 mod trade_partner_views;
 
 mod structs;
-use structs::{
-    AddResponse, AddressBody, MoneyBody, PriceListBody, TradePartnerAdminBody, TradePartnerBody,
-    TradePartnerListBody, WarehouseAdminBody, WarehouseBody,
-};
+use structs::{AddressBody, MoneyBody, TradePartnerAdminBody, TradePartnerBody, WarehouseBody};
 
 #[derive(OpenApi)]
 #[openapi(
+    info(
+        title = "Trade Parner Administrator",
+        description = "API for Administration App",
+        license(name = "MIT"),
+        version = "1.0.0"
+    ),
     paths(
-        admin_views::add,
+        admin_views::add_trade_parnter,
         admin_views::get_trade_partner_list,
         admin_views::get_trade_partner,
-        admin_views::modify_by_id,
+        admin_views::modify_trade_partner,
         admin_views::delete_trade_partner,
         admin_views::get_price_list,
         admin_views::add_price,
@@ -35,20 +39,26 @@ use structs::{
         TradePartnerBody,
         TradePartnerAdminBody,
         MoneyBody,
-        AddResponse,
-        PriceListBody,
         ParcelSize,
-        TradePartnerListBody,
-        Address,
-        WarehouseAdminBody,
         WarehouseBody,
         AddressBody
-    ))
+    )),
+    tags(
+        (name = "Trade Partner", description = "Trade Partner management"),
+        (name = "Price List", description = "Price List management for specific Trade Partner"),
+        (name = "Warehouse", description = "Warehouse management for specific Trade Partner"),
+    )
 )]
 struct ApiDocAdmin;
 
 #[derive(OpenApi)]
 #[openapi(
+    info(
+        title = "Trade Oarner Informations",
+        description = "API for Administration App",
+        license(name = "MIT"),
+        version = "1.0.0"
+    ),
     paths(
         trade_partner_views::get_trade_partner,
         trade_partner_views::get_price_list,
@@ -59,11 +69,15 @@ struct ApiDocAdmin;
     components(schemas(
         TradePartnerBody,
         MoneyBody,
-        PriceListBody,
         ParcelSize,
         WarehouseBody,
         AddressBody
-    ))
+    )),
+    tags(
+        (name = "Trade Partner", description = "Trade Partner Informations"),
+        (name = "Price List", description = "Price List Informations"),
+        (name = "Warehouse", description = "Warehouse Informations"),
+    )
 )]
 struct ApiDoc;
 
@@ -88,8 +102,8 @@ pub fn config(cfg: &mut web::ServiceConfig) {
         .service(trade_partner_views::get_warehouse)
         .service(admin_views::get_trade_partner_list)
         .service(admin_views::get_trade_partner)
-        .service(admin_views::add)
-        .service(admin_views::modify_by_id)
+        .service(admin_views::add_trade_parnter)
+        .service(admin_views::modify_trade_partner)
         .service(admin_views::delete_trade_partner)
         .service(admin_views::get_price_list)
         .service(admin_views::add_price)
