@@ -1,4 +1,4 @@
-use chrono::{DateTime, Utc};
+use chrono::{NaiveDateTime, Utc};
 
 use crate::delivery::domain::value_objects::ParcelStatus;
 
@@ -7,7 +7,7 @@ pub struct StatusRecord {
     pub id: i32,
     pub parcel_id: i32,
     pub status: ParcelStatus,
-    pub creation_time: DateTime<Utc>,
+    pub creation_time: NaiveDateTime,
 }
 
 impl StatusRecord {
@@ -16,7 +16,7 @@ impl StatusRecord {
             id: 0,
             parcel_id,
             status,
-            creation_time: Utc::now(),
+            creation_time: Utc::now().naive_utc(),
         }
     }
 }
