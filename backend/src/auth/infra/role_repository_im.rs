@@ -1,5 +1,7 @@
-use crate::auth::domain::repository::RoleTrait;
-use crate::auth::domain::Role;
+use crate::{
+    auth::domain::{repository::RoleTrait, Role},
+    IMPool,
+};
 
 use std::sync::Mutex;
 
@@ -30,8 +32,8 @@ lazy_static! {
     };
 }
 
-impl RoleTrait for Role {
-    fn attach_user(&self, user_id: usize) {
+impl RoleTrait<IMPool> for Role {
+    fn attach_user(&self, _: IMPool, user_id: usize) {
         DATA.lock().unwrap().roles.push(RoleRow {
             role: self.clone(),
             user_id,
@@ -39,21 +41,21 @@ impl RoleTrait for Role {
         println!("{:?}", DATA.lock().unwrap().roles);
     }
 
-    fn detach_user(&self, user_id: usize) {
+    fn detach_user(&self, _: IMPool, user_id: usize) {
         DATA.lock()
             .unwrap()
             .roles
             .retain(|role_row| role_row.user_id == user_id && role_row.role == self.clone())
     }
 
-    fn check_user(&self, user_id: usize) -> bool {
+    fn check_user(&self, _: IMPool, user_id: usize) -> bool {
         DATA.lock().unwrap().roles.contains(&RoleRow {
             role: self.clone(),
             user_id,
         })
     }
 
-    fn get_user_roles(user_id: usize) -> Option<Vec<Role>> {
+    fn get_user_roles(_: IMPool, user_id: usize) -> Option<Vec<Role>> {
         Some(
             DATA.lock()
                 .unwrap()

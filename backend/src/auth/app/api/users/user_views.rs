@@ -1,4 +1,4 @@
-use actix_web::{delete, get, post, put, web, web::Json, HttpResponse, Responder};
+use actix_web::{delete, get, post, put, web, HttpResponse, Responder};
 
 use crate::{
     auth::{
@@ -30,7 +30,7 @@ type Pool = IMPool;
 #[post("")]
 async fn view_admin_add_user(
     db_pool: web::Data<Pool>,
-    body: Json<AddUser>,
+    body: web::Json<AddUser>,
     _: AuthExtractor,
     _: AdminExtractor,
 ) -> impl Responder {
@@ -65,7 +65,7 @@ async fn view_admin_add_user(
 #[put("")]
 async fn view_modify_user(
     db_pool: web::Data<Pool>,
-    body: Json<UserBody>,
+    body: web::Json<UserBody>,
     auth: AuthExtractor,
 ) -> impl Responder {
     modify_user(**db_pool, auth.user.user_id, body)
@@ -140,7 +140,7 @@ async fn view_admin_get_user(
 async fn view_admin_modify_user(
     db_pool: web::Data<Pool>,
     path: web::Path<usize>,
-    body: Json<UserBody>,
+    body: web::Json<UserBody>,
     _: AuthExtractor,
     _: AdminExtractor,
 ) -> impl Responder {
@@ -179,7 +179,7 @@ async fn view_admin_delete_user(
     }
 }
 
-fn modify_user(db_pool: Pool, user_id: usize, body: Json<UserBody>) -> impl Responder {
+fn modify_user(db_pool: Pool, user_id: usize, body: web::Json<UserBody>) -> impl Responder {
     match User::find_by_id(db_pool, user_id) {
         None => HttpResponse::NotFound().finish(),
         Some(mut user) => {

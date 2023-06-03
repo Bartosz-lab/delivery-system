@@ -1,8 +1,14 @@
-use actix_web::{delete, get, post, web, web::Json, HttpResponse, Responder};
+use actix_web::{delete, get, post, web, HttpResponse, Responder};
 
-use crate::auth::app::{AdminExtractor, AuthExtractor};
-use crate::auth::domain::repository::RoleTrait;
-use crate::auth::domain::Role;
+use crate::{
+    auth::{
+        app::{AdminExtractor, AuthExtractor},
+        domain::{repository::RoleTrait, Role},
+    },
+    IMPool,
+};
+
+type Pool = IMPool;
 
 #[utoipa::path(
     context_path = "/user",
@@ -22,12 +28,13 @@ use crate::auth::domain::Role;
 )]
 #[get("/{user_id}/role")]
 async fn view_admin_get_roles(
+    db_pool: web::Data<Pool>,
     path: web::Path<usize>,
     _: AuthExtractor,
     _: AdminExtractor,
 ) -> impl Responder {
     let user_id = path.into_inner();
-    match Role::get_user_roles(user_id) {
+    match Role::get_user_roles(**db_pool, user_id) {
         None => HttpResponse::NotFound().finish(),
         Some(roles) => HttpResponse::Ok().json(roles),
     }
@@ -49,14 +56,15 @@ async fn view_admin_get_roles(
 )]
 #[post("/{user_id}/role")]
 async fn view_admin_add_role(
-    role: Json<Role>,
+    db_pool: web::Data<Pool>,
+    role: web::Json<Role>,
     path: web::Path<usize>,
     _: AuthExtractor,
     _: AdminExtractor,
 ) -> impl Responder {
     let user_id = path.into_inner();
 
-    role.attach_user(user_id);
+    role.attach_user(**db_pool, user_id);
     HttpResponse::Ok().finish()
 }
 
@@ -76,13 +84,14 @@ async fn view_admin_add_role(
 )]
 #[delete("/{user_id}/role")]
 async fn view_admin_delete_role(
-    role: Json<Role>,
+    db_pool: web::Data<Pool>,
+    role: web::Json<Role>,
     path: web::Path<usize>,
     _: AuthExtractor,
     _: AdminExtractor,
 ) -> impl Responder {
     let user_id = path.into_inner();
 
-    role.detach_user(user_id);
+    role.detach_user(**db_pool, user_id);
     HttpResponse::Ok().finish()
 }

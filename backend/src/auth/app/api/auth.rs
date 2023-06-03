@@ -77,7 +77,7 @@ async fn login(
                 let claims: TokenClaims = TokenClaims {
                     sub: serde_json::json!(ClaimsData {
                         user_id: user.id,
-                        roles: Role::get_user_roles(user.id).unwrap(),
+                        roles: Role::get_user_roles(**db_pool, user.id).unwrap(),
                     })
                     .to_string(),
                     exp: (now + Duration::minutes(data.env.jwt_expires_in)).timestamp() as usize,
