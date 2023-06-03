@@ -30,7 +30,7 @@ type Pool = IMPool;
 #[get("/{parcel_id}")]
 async fn get_parcel(db_pool: web::Data<Pool>, path: web::Path<usize>) -> impl Responder {
     let parcel_id = path.into_inner();
-    match Parcel::find_by_id(parcel_id) {
+    match Parcel::find_by_id(**db_pool, parcel_id) {
         None => HttpResponse::NotFound().finish(),
         Some(parcel) => {
             let address = Address::find_by_id(**db_pool, parcel.recipient_address_id).unwrap();
@@ -94,15 +94,18 @@ async fn add_parcel(
             ),
         ),
     ) {
-        (Ok(date), Some(warehouse), Some(address_id)) => match Parcel::insert(Parcel::new(
-            body.recipient_name.clone(),
-            body.recipient_email.clone(),
-            body.recipient_phone.clone(),
-            address_id,
-            warehouse.id,
-            date,
-            body.size.clone(),
-        )) {
+        (Ok(date), Some(warehouse), Some(address_id)) => match Parcel::insert(
+            **db_pool,
+            Parcel::new(
+                body.recipient_name.clone(),
+                body.recipient_email.clone(),
+                body.recipient_phone.clone(),
+                address_id,
+                warehouse.id,
+                date,
+                body.size.clone(),
+            ),
+        ) {
             None => HttpResponse::BadRequest().finish(),
             Some(id) => HttpResponse::Created().json(id),
         },
@@ -158,7 +161,7 @@ async fn modify_parcel(
     body: web::Json<ModifyParcelRequest>,
 ) -> impl Responder {
     let parcel_id = path.into_inner();
-    match Parcel::find_by_id(parcel_id) {
+    match Parcel::find_by_id(**db_pool, parcel_id) {
         None => HttpResponse::NotFound().finish(),
         Some(mut parcel) => {
             if let Some(address) = &body.address {
@@ -179,7 +182,7 @@ async fn modify_parcel(
                             None => return HttpResponse::BadRequest().finish(),
                             Some(_) => parcel.recipient_address_id = address_id,
                         }
-                        if !Parcel::save(parcel) {
+                        if !Parcel::save(**db_pool, parcel) {
                             return HttpResponse::BadRequest().finish();
                         }
                     }

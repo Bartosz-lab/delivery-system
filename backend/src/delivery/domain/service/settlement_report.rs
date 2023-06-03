@@ -2,11 +2,16 @@ use chrono::NaiveDate;
 use rust_decimal::Decimal;
 use rusty_money::iso;
 
-use crate::delivery::domain::{
-    repository::{ParcelTrait, TradePartnerTrait, WarehouseTrait},
-    value_objects::{ParcelSize, PriceList},
+use crate::{
+    delivery::domain::{
+        repository::{ParcelTrait, TradePartnerTrait, WarehouseTrait},
+        value_objects::{ParcelSize, PriceList},
+        Parcel, TradePartner, Warehouse,
+    },
+    IMPool,
 };
-use crate::delivery::domain::{Parcel, TradePartner, Warehouse};
+
+type Pool = IMPool;
 
 pub mod structs;
 use structs::{MoneyBody, SettlementSizeReport, SettlementTotalReport, SettlementWarehouseReport};
@@ -15,6 +20,7 @@ pub struct SettlementReport;
 
 impl SettlementReport {
     pub fn gen_report(
+        db_pool: Pool,
         start_date: NaiveDate,
         end_date: NaiveDate,
         trade_partner_id: usize,
@@ -47,6 +53,7 @@ impl SettlementReport {
             .collect();
 
         let warehouse_reports = SettlementReport::gen_warehouses(
+            db_pool,
             trade_partner.price_list,
             start_date,
             end_date,
@@ -90,6 +97,7 @@ impl SettlementReport {
     }
 
     fn gen_warehouses(
+        db_pool: Pool,
         price_list: PriceList,
         start_date: NaiveDate,
         end_date: NaiveDate,
@@ -99,6 +107,7 @@ impl SettlementReport {
             .into_iter()
             .map(|(warehouse_id, warehouse_trade_partner_id)| {
                 let size_reports = SettlementReport::gen_sizes(
+                    db_pool,
                     price_list.clone(),
                     start_date,
                     end_date,
@@ -145,6 +154,7 @@ impl SettlementReport {
     }
 
     fn gen_sizes(
+        db_pool: Pool,
         price_list: PriceList,
         start_date: NaiveDate,
         end_date: NaiveDate,
@@ -159,8 +169,13 @@ impl SettlementReport {
                 }
                 let price = price_opt.unwrap();
 
-                let parcels =
-                    Parcel::find_by_date_and_warehouse_id(start_date, end_date, warehouse_id, size);
+                let parcels = Parcel::find_by_date_and_warehouse_id(
+                    db_pool,
+                    start_date,
+                    end_date,
+                    warehouse_id,
+                    size,
+                );
                 let parcels_num = parcels.len();
                 let parcel_num_dec: Decimal = parcels_num.into();
 

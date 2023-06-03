@@ -1,4 +1,7 @@
-use crate::delivery::domain::{repository::ParcelTrait, value_objects::ParcelSize, Parcel};
+use crate::{
+    delivery::domain::{repository::ParcelTrait, value_objects::ParcelSize, Parcel},
+    IMPool,
+};
 
 use chrono::NaiveDate;
 use std::sync::Mutex;
@@ -37,8 +40,8 @@ lazy_static! {
     };
 }
 
-impl ParcelTrait for Parcel {
-    fn insert(parcel: Parcel) -> Option<usize> {
+impl ParcelTrait<IMPool> for Parcel {
+    fn insert(_: IMPool, parcel: Parcel) -> Option<usize> {
         let mut parcel = parcel;
         let id = DATA.lock().unwrap().last_id;
         parcel.id = id;
@@ -47,7 +50,7 @@ impl ParcelTrait for Parcel {
         Some(id)
     }
 
-    fn delete(id: usize) -> bool {
+    fn delete(_: IMPool, id: usize) -> bool {
         let _ = &DATA
             .lock()
             .unwrap()
@@ -56,13 +59,13 @@ impl ParcelTrait for Parcel {
         true
     }
 
-    fn save(parcel: Parcel) -> bool {
-        Parcel::delete(parcel.id);
+    fn save(db_pool: IMPool, parcel: Parcel) -> bool {
+        Parcel::delete(db_pool, parcel.id);
         DATA.lock().unwrap().list.push(parcel);
         true
     }
 
-    fn find_by_id(id: usize) -> Option<Parcel> {
+    fn find_by_id(_: IMPool, id: usize) -> Option<Parcel> {
         let list = &DATA.lock().unwrap().list;
 
         let list = list
@@ -75,7 +78,7 @@ impl ParcelTrait for Parcel {
         }
     }
 
-    fn find_by_warehouse_id(warehouse_id: usize) -> Vec<Parcel> {
+    fn find_by_warehouse_id(_: IMPool, warehouse_id: usize) -> Vec<Parcel> {
         let list = &DATA.lock().unwrap().list;
 
         list.into_iter()
@@ -85,6 +88,7 @@ impl ParcelTrait for Parcel {
     }
 
     fn find_by_date_and_warehouse_id(
+        _: IMPool,
         start_date: NaiveDate,
         end_date: NaiveDate,
         warehouse_id: usize,

@@ -24,6 +24,7 @@ type Pool = IMPool;
 )]
 #[get("/settlement/{start_date}/{end_date}")]
 async fn trade_partner_settlement_report(
+    db_pool: web::Data<Pool>,
     path: web::Path<(String, String)>,
     _: AuthExtractor,
     extractor: TradePartnerExtractor,
@@ -34,6 +35,7 @@ async fn trade_partner_settlement_report(
         NaiveDate::parse_from_str(end_date.as_str(), "%d-%m-%Y"),
     ) {
         (Ok(start_date), Ok(end_date)) => HttpResponse::Ok().json(SettlementReport::gen_report(
+            **db_pool,
             start_date,
             end_date,
             extractor.trade_partner_id,
@@ -55,6 +57,7 @@ async fn trade_partner_settlement_report(
 )]
 #[get("/settlement/{start_date}/{end_date}/{trade_partner_id}")]
 async fn trade_partner_settlement_report_admin(
+    db_pool: web::Data<Pool>,
     path: web::Path<(String, String, usize)>,
     _: AuthExtractor,
     _: AdminExtractor,
@@ -65,6 +68,7 @@ async fn trade_partner_settlement_report_admin(
         NaiveDate::parse_from_str(end_date.as_str(), "%d-%m-%Y"),
     ) {
         (Ok(start_date), Ok(end_date)) => HttpResponse::Ok().json(SettlementReport::gen_report(
+            **db_pool,
             start_date,
             end_date,
             trade_partner_id,
@@ -86,13 +90,16 @@ async fn trade_partner_settlement_report_admin(
 )]
 #[get("/parcel/collect/{date}")]
 async fn collect_report(
+    db_pool: web::Data<Pool>,
     path: web::Path<String>,
     _: AuthExtractor,
     _: CourierExtractor,
 ) -> impl Responder {
     let date = path.into_inner();
     match NaiveDate::parse_from_str(date.as_str(), "%d-%m-%Y") {
-        Ok(date) => HttpResponse::Ok().json(ParcelCollectReport::gen_report(date, vec![])),
+        Ok(date) => {
+            HttpResponse::Ok().json(ParcelCollectReport::gen_report(**db_pool, date, vec![]))
+        }
         Err(_) => HttpResponse::BadRequest().finish(),
     }
 }

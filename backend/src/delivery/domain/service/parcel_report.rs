@@ -20,7 +20,11 @@ use structs::{
 pub struct ParcelCollectReport;
 
 impl ParcelCollectReport {
-    pub fn gen_report(date: NaiveDate, warehouses_id: Vec<usize>) -> ParcelTotalReport {
+    pub fn gen_report(
+        db_pool: Pool,
+        date: NaiveDate,
+        warehouses_id: Vec<usize>,
+    ) -> ParcelTotalReport {
         let mut warehouses_id = warehouses_id;
         if warehouses_id.len() == 0 {
             warehouses_id = Warehouse::get_all()
@@ -29,7 +33,7 @@ impl ParcelCollectReport {
                 .collect()
         }
 
-        let warehouse_reports = ParcelCollectReport::gen_warehouses(date, warehouses_id);
+        let warehouse_reports = ParcelCollectReport::gen_warehouses(db_pool, date, warehouses_id);
 
         let parcels_num = warehouse_reports
             .clone()
@@ -44,11 +48,15 @@ impl ParcelCollectReport {
         }
     }
 
-    fn gen_warehouses(date: NaiveDate, warehouses_id: Vec<usize>) -> Vec<ParcelWarehouseReport> {
+    fn gen_warehouses(
+        db_pool: Pool,
+        date: NaiveDate,
+        warehouses_id: Vec<usize>,
+    ) -> Vec<ParcelWarehouseReport> {
         warehouses_id
             .into_iter()
             .map(|warehouse_id| {
-                let size_reports = ParcelCollectReport::gen_sizes(date, warehouse_id);
+                let size_reports = ParcelCollectReport::gen_sizes(db_pool, date, warehouse_id);
 
                 let parcels_num = size_reports
                     .clone()
@@ -65,10 +73,11 @@ impl ParcelCollectReport {
             .collect()
     }
 
-    fn gen_sizes(date: NaiveDate, warehouse_id: usize) -> Vec<ParcelSizeReport> {
+    fn gen_sizes(db_pool: Pool, date: NaiveDate, warehouse_id: usize) -> Vec<ParcelSizeReport> {
         ParcelSize::iterator()
             .map(|size| {
-                let parcels = Parcel::find_by_date_and_warehouse_id(date, date, warehouse_id, size);
+                let parcels =
+                    Parcel::find_by_date_and_warehouse_id(db_pool, date, date, warehouse_id, size);
                 let parcels_num = parcels.len();
 
                 ParcelSizeReport {
@@ -97,7 +106,7 @@ impl ParcelDeliveryReport {
         let parcels = parcels
             .into_iter()
             .filter_map(|id| {
-                let parcel = Parcel::find_by_id(id);
+                let parcel = Parcel::find_by_id(db_pool, id);
                 if parcel.is_none() {
                     return None;
                 }
