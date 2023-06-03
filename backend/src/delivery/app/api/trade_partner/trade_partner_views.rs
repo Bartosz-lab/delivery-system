@@ -26,7 +26,7 @@ async fn get_trade_partner(
     _: AuthExtractor,
     extractor: TradePartnerExtractor,
 ) -> impl Responder {
-    match TradePartner::find_by_id(**db_pool, extractor.trade_partner_id) {
+    match TradePartner::find_by_id((**db_pool).clone(), extractor.trade_partner_id) {
         None => HttpResponse::InternalServerError().finish(),
         Some(trade_partner) => HttpResponse::Ok().json(gets::get_trade_partner(trade_partner)),
     }
@@ -47,7 +47,7 @@ async fn get_price_list(
     _: AuthExtractor,
     extractor: TradePartnerExtractor,
 ) -> impl Responder {
-    match TradePartner::find_by_id(**db_pool, extractor.trade_partner_id) {
+    match TradePartner::find_by_id((**db_pool).clone(), extractor.trade_partner_id) {
         None => HttpResponse::InternalServerError().finish(),
         Some(trade_partner) => HttpResponse::Ok().json(gets::get_price_list(trade_partner)),
     }
@@ -75,7 +75,7 @@ async fn get_price(
 ) -> impl Responder {
     let size = path.into_inner();
 
-    match TradePartner::find_by_id(**db_pool, extractor.trade_partner_id) {
+    match TradePartner::find_by_id((**db_pool).clone(), extractor.trade_partner_id) {
         None => HttpResponse::InternalServerError().finish(),
         Some(trade_partner) => gets::get_price(trade_partner, size),
     }
@@ -97,7 +97,7 @@ async fn get_warehouse_list(
     extractor: TradePartnerExtractor,
 ) -> impl Responder {
     HttpResponse::Ok().json(gets::get_warehouse_list(
-        **db_pool,
+        (**db_pool).clone(),
         extractor.trade_partner_id,
     ))
 }
@@ -120,5 +120,9 @@ async fn get_warehouse(
     extractor: TradePartnerExtractor,
 ) -> impl Responder {
     let warehouse_id = path.into_inner();
-    gets::get_warehouse(**db_pool, extractor.trade_partner_id, warehouse_id)
+    gets::get_warehouse(
+        (**db_pool).clone(),
+        extractor.trade_partner_id,
+        warehouse_id,
+    )
 }

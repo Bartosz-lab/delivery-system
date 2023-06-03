@@ -35,7 +35,7 @@ async fn trade_partner_settlement_report(
         NaiveDate::parse_from_str(end_date.as_str(), "%d-%m-%Y"),
     ) {
         (Ok(start_date), Ok(end_date)) => HttpResponse::Ok().json(SettlementReport::gen_report(
-            **db_pool,
+            (**db_pool).clone(),
             start_date,
             end_date,
             extractor.trade_partner_id,
@@ -68,7 +68,7 @@ async fn trade_partner_settlement_report_admin(
         NaiveDate::parse_from_str(end_date.as_str(), "%d-%m-%Y"),
     ) {
         (Ok(start_date), Ok(end_date)) => HttpResponse::Ok().json(SettlementReport::gen_report(
-            **db_pool,
+            (**db_pool).clone(),
             start_date,
             end_date,
             trade_partner_id,
@@ -97,9 +97,11 @@ async fn collect_report(
 ) -> impl Responder {
     let date = path.into_inner();
     match NaiveDate::parse_from_str(date.as_str(), "%d-%m-%Y") {
-        Ok(date) => {
-            HttpResponse::Ok().json(ParcelCollectReport::gen_report(**db_pool, date, vec![]))
-        }
+        Ok(date) => HttpResponse::Ok().json(ParcelCollectReport::gen_report(
+            (**db_pool).clone(),
+            date,
+            vec![],
+        )),
         Err(_) => HttpResponse::BadRequest().finish(),
     }
 }
@@ -123,7 +125,9 @@ async fn delivery_report(
 ) -> impl Responder {
     let date = path.into_inner();
     match NaiveDate::parse_from_str(date.as_str(), "%d-%m-%Y") {
-        Ok(date) => HttpResponse::Ok().json(ParcelDeliveryReport::gen_report(**db_pool, date)),
+        Ok(date) => {
+            HttpResponse::Ok().json(ParcelDeliveryReport::gen_report((**db_pool).clone(), date))
+        }
         Err(_) => HttpResponse::BadRequest().finish(),
     }
 }

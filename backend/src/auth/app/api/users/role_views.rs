@@ -5,10 +5,10 @@ use crate::{
         app::{AdminExtractor, AuthExtractor},
         domain::{repository::RoleTrait, Role},
     },
-    IMPool,
+    PgPool,
 };
 
-type Pool = IMPool;
+type Pool = PgPool;
 
 #[utoipa::path(
     context_path = "/user",
@@ -34,7 +34,7 @@ async fn view_admin_get_roles(
     _: AdminExtractor,
 ) -> impl Responder {
     let user_id = path.into_inner();
-    match Role::get_user_roles(**db_pool, user_id) {
+    match Role::get_user_roles((**db_pool).clone(), user_id) {
         None => HttpResponse::NotFound().finish(),
         Some(roles) => HttpResponse::Ok().json(roles),
     }
@@ -64,7 +64,7 @@ async fn view_admin_add_role(
 ) -> impl Responder {
     let user_id = path.into_inner();
 
-    role.attach_user(**db_pool, user_id);
+    role.attach_user((**db_pool).clone(), user_id);
     HttpResponse::Ok().finish()
 }
 
@@ -92,6 +92,6 @@ async fn view_admin_delete_role(
 ) -> impl Responder {
     let user_id = path.into_inner();
 
-    role.detach_user(**db_pool, user_id);
+    role.detach_user((**db_pool).clone(), user_id);
     HttpResponse::Ok().finish()
 }

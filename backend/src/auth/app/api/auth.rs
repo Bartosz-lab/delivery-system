@@ -17,13 +17,13 @@ use crate::{
             Role, User,
         },
     },
-    AppState, IMPool,
+    AppState, PgPool,
 };
 
 mod structs;
 use structs::{ChangePassBody, LoginBody};
 
-type Pool = IMPool;
+type Pool = PgPool;
 
 #[derive(OpenApi)]
 #[openapi(
@@ -68,7 +68,7 @@ async fn login(
     body: Json<LoginBody>,
     data: web::Data<AppState>,
 ) -> impl Responder {
-    let user = User::find_by_email(**db_pool, body.login.clone());
+    let user = User::find_by_email((**db_pool).clone(), body.login.clone());
     match user {
         None => HttpResponse::NotAcceptable().finish(),
         Some(user) => {
@@ -77,7 +77,7 @@ async fn login(
                 let claims: TokenClaims = TokenClaims {
                     sub: serde_json::json!(ClaimsData {
                         user_id: user.id,
-                        roles: Role::get_user_roles(**db_pool, user.id).unwrap(),
+                        roles: Role::get_user_roles((**db_pool).clone(), user.id).unwrap(),
                     })
                     .to_string(),
                     exp: (now + Duration::minutes(data.env.jwt_expires_in)).timestamp() as usize,
@@ -140,13 +140,13 @@ async fn changepass(
     body: Json<ChangePassBody>,
     auth: AuthExtractor,
 ) -> impl Responder {
-    match User::find_by_id(**db_pool, auth.user.user_id) {
+    match User::find_by_id((**db_pool).clone(), auth.user.user_id) {
         None => HttpResponse::InternalServerError().finish(),
         Some(mut user) => {
             // there should be pass validation
             if true {
                 user.set_password(body.password.clone());
-                User::save(**db_pool, user);
+                User::save((**db_pool).clone(), user);
                 HttpResponse::Ok().finish()
             } else {
                 HttpResponse::NotAcceptable().finish()

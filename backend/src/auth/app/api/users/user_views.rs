@@ -8,10 +8,10 @@ use crate::{
         },
         domain::{repository::UserTrait, User},
     },
-    IMPool,
+    PgPool,
 };
 
-type Pool = IMPool;
+type Pool = PgPool;
 
 #[utoipa::path(
     context_path = "/user",
@@ -35,7 +35,7 @@ async fn view_admin_add_user(
     _: AdminExtractor,
 ) -> impl Responder {
     let res = User::insert(
-        **db_pool,
+        (((**db_pool).clone()).clone()).clone(),
         User::new(
             body.firstname.to_owned(),
             body.lastname.to_owned(),
@@ -68,7 +68,7 @@ async fn view_modify_user(
     body: web::Json<UserBody>,
     auth: AuthExtractor,
 ) -> impl Responder {
-    modify_user(**db_pool, auth.user.user_id, body)
+    modify_user(((**db_pool).clone()).clone(), auth.user.user_id, body)
 }
 
 #[utoipa::path(
@@ -81,7 +81,7 @@ async fn view_modify_user(
 )]
 #[get("")]
 async fn view_get_user(db_pool: web::Data<Pool>, auth: AuthExtractor) -> impl Responder {
-    match User::find_by_id(**db_pool, auth.user.user_id) {
+    match User::find_by_id(((**db_pool).clone()).clone(), auth.user.user_id) {
         None => HttpResponse::InternalServerError().finish(),
         Some(user) => HttpResponse::Ok().json(UserBody {
             firstname: Some(user.firstname),
@@ -110,7 +110,7 @@ async fn view_admin_get_user(
     _: AdminExtractor,
 ) -> impl Responder {
     let user_id = path.into_inner();
-    match User::find_by_id(**db_pool, user_id) {
+    match User::find_by_id(((**db_pool).clone()).clone(), user_id) {
         None => HttpResponse::NotFound().finish(),
         Some(user) => HttpResponse::Ok().json(UserBody {
             firstname: Some(user.firstname),
@@ -145,14 +145,14 @@ async fn view_admin_modify_user(
     _: AdminExtractor,
 ) -> impl Responder {
     let user_id = path.into_inner();
-    modify_user(**db_pool, user_id, body)
+    modify_user(((**db_pool).clone()).clone(), user_id, body)
 }
 
 #[utoipa::path(
     context_path = "/user",
     tag = "User",
     responses(
-        (status = CREATED, description = "User deleted successfully"),
+        (status = OK, description = "User deleted successfully"),
         (status = NOT_FOUND, description = "User don't exist"),
         (status = BAD_REQUEST, description = "Can't delete user"),
         (status = UNAUTHORIZED, description = "User isn't logged in"),
@@ -167,10 +167,10 @@ async fn view_admin_delete_user(
     _: AdminExtractor,
 ) -> impl Responder {
     let user_id = path.into_inner();
-    match User::find_by_id(**db_pool, user_id) {
+    match User::find_by_id(((**db_pool).clone()).clone(), user_id) {
         None => HttpResponse::NotFound().finish(),
         Some(user) => {
-            if User::delete(**db_pool, user.id) {
+            if User::delete(((**db_pool).clone()).clone(), user.id) {
                 HttpResponse::Ok().finish()
             } else {
                 HttpResponse::BadRequest().finish()
@@ -180,7 +180,7 @@ async fn view_admin_delete_user(
 }
 
 fn modify_user(db_pool: Pool, user_id: i32, body: web::Json<UserBody>) -> impl Responder {
-    match User::find_by_id(db_pool, user_id) {
+    match User::find_by_id(db_pool.clone(), user_id) {
         None => HttpResponse::NotFound().finish(),
         Some(mut user) => {
             // There should be data validation

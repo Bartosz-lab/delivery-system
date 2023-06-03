@@ -1,98 +1,95 @@
-// use actix_web::{error, get, middleware, post, web, App, HttpResponse, HttpServer, Responder};
-// use diesel::{prelude::*, r2d2};
+use diesel::prelude::*;
 
-// use crate::{
-//     auth::domain::{repository::UserTrait, User},
-//     PgPool,
-// };
+use crate::{
+    auth::domain::{repository::UserTrait, User},
+    PgPool,
+};
 
-// use std::sync::Mutex;
+impl UserTrait<PgPool> for User {
+    fn insert(db_pool: PgPool, user: User) -> Option<i32> {
+        use crate::schema::users::dsl::*;
 
-// struct UserRepository {
-//     users: Vec<User>,
-//     last_id: i32,
-// }
+        if let Ok(mut conn) = db_pool.get() {
+            let result = diesel::insert_into(users)
+                .values((
+                    &firstname.eq(user.firstname),
+                    &lastname.eq(user.lastname),
+                    &email.eq(user.email),
+                    &phone.eq(user.phone),
+                    &pass_hash.eq(user.pass_hash),
+                ))
+                .returning(id)
+                .get_results(&mut conn);
 
-// lazy_static! {
-//     static ref DATA: Mutex<UserRepository> = {
-//         let mut user1 = User::new(
-//             "Jan".to_string(),
-//             "Testowy".to_string(),
-//             "jan@testowy.com".to_string(),
-//             "123456789".to_string(),
-//         );
-//         user1.id = 1;
-//         let mut user2 = User::new(
-//             "Anna".to_string(),
-//             "Testowa".to_string(),
-//             "anna@testowa.com".to_string(),
-//             "123456789".to_string(),
-//         );
-//         user2.id = 2;
-//         Mutex::new(UserRepository {
-//             users: vec![user1, user2],
-//             last_id: 10,
-//         })
-//     };
-// }
+            if let Ok(id_vec) = result {
+                Some(id_vec[0])
+            } else {
+                None
+            }
+        } else {
+            // There should be database error
+            None
+        }
+    }
 
-// impl UserTrait<PgPool> for User {
-//     fn insert(_: PgPool, user: User) -> Option<i32> {
-//         let mut user = user;
-//         let id = DATA.lock().unwrap().last_id;
-//         user.id = id;
-//         DATA.lock().unwrap().last_id += 1;
-//         DATA.lock().unwrap().users.push(user);
-//         Some(id)
-//     }
+    fn delete(db_pool: PgPool, user_id: i32) -> bool {
+        use crate::schema::users::dsl::*;
+        if let Ok(mut conn) = db_pool.get() {
+            let result = diesel::delete(users.filter(id.eq(user_id))).execute(&mut conn);
 
-//     fn delete(_: PgPool, user_id: i32) -> bool {
-//         let _ = &DATA.lock().unwrap().users.retain(|user| user.id != user_id);
-//         true
-//     }
+            match result {
+                Ok(_) => true,
+                Err(_) => false,
+            }
+        } else {
+            // There should be database error
+            false
+        }
+    }
 
-//     fn save(db_pool: PgPool, user: User) -> bool {
-//         User::delete(db_pool, user.id);
-//         DATA.lock().unwrap().users.push(user);
-//         true
-//     }
+    fn save(db_pool: PgPool, user: User) -> bool {
+        if let Ok(mut conn) = db_pool.get() {
+            let result = diesel::update(&user.clone())
+                .set(user)
+                .get_results::<User>(&mut conn);
 
-//     fn find_by_id(db_pool: PgPool, user_id: i32) -> Option<User> {
-//         let user = web::block(move || {
-//             use crate::schema::users::dsl::*;
-//             let mut conn = db_pool.get()?;
+            match result {
+                Ok(_) => true,
+                Err(_) => false,
+            }
+        } else {
+            // There should be database error
+            false
+        }
+    }
 
-//             let user = users
-//                 // .filter(id.eq(user_id))
-//                 .first::<User>(conn)
-//                 .optional()?;
-//         })
-//         .await?
-//         // map diesel query errors to a 500 error response
-//         .map_err(error::ErrorInternalServerError)?;
+    fn find_by_id(db_pool: PgPool, user_id: i32) -> Option<User> {
+        use crate::schema::users::dsl::*;
+        if let Ok(mut conn) = db_pool.get() {
+            let user = users
+                .filter(id.eq(user_id))
+                .first::<User>(&mut conn)
+                .optional();
 
-//         let users = &DATA.lock().unwrap().users;
+            user.unwrap_or(None)
+        } else {
+            // There should be database error
+            None
+        }
+    }
 
-//         let users = users
-//             .into_iter()
-//             .filter(|user| user.id == id)
-//             .collect::<Vec<&User>>();
-//         match users.len() {
-//             0 => None,
-//             _ => Some(users.first().unwrap().clone().clone()),
-//         }
-//     }
+    fn find_by_email(db_pool: PgPool, user_email: String) -> Option<User> {
+        use crate::schema::users::dsl::*;
+        if let Ok(mut conn) = db_pool.get() {
+            let user = users
+                .filter(email.eq(user_email))
+                .first::<User>(&mut conn)
+                .optional();
 
-//     fn find_by_email(_: PgPool, email: String) -> Option<User> {
-//         let users = &DATA.lock().unwrap().users;
-
-//         let users = users
-//             .into_iter()
-//             .filter(|user| user.email == email)
-//             .collect::<Vec<&User>>();
-//         match users.len() {
-//             0 => None,
-//             _ => Some(users.first().unwrap().clone().clone()),
-//         }
-//     }
-// }
+            user.unwrap_or(None)
+        } else {
+            // There should be database error
+            None
+        }
+    }
+}

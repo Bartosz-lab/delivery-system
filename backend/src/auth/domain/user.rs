@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::schema::users;
 
-#[derive(Debug, Clone, Serialize, Deserialize, Queryable, Insertable)]
+#[derive(Debug, Clone, Serialize, Deserialize, Queryable, Identifiable, AsChangeset)]
 #[diesel(table_name = users)]
 pub struct User {
     pub id: i32,
@@ -14,7 +14,7 @@ pub struct User {
     pub lastname: String,
     pub email: String,
     pub phone: String,
-    pass_hash: String,
+    pub pass_hash: String,
 }
 
 impl User {

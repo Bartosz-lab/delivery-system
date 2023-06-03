@@ -38,7 +38,6 @@ impl RoleTrait<IMPool> for Role {
             role: self.clone(),
             user_id,
         });
-        println!("{:?}", DATA.lock().unwrap().roles);
     }
 
     fn detach_user(&self, _: IMPool, user_id: i32) {

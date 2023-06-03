@@ -41,7 +41,7 @@ async fn add_trade_parnter(
     _: AuthExtractor,
     _: AdminExtractor,
 ) -> impl Responder {
-    let res = TradePartner::insert(**db_pool, TradePartner::new(body.name.to_owned()));
+    let res = TradePartner::insert((**db_pool).clone(), TradePartner::new(body.name.to_owned()));
     match res {
         Some(id) => HttpResponse::Created().json(id),
         None => HttpResponse::BadRequest().finish(),
@@ -63,7 +63,7 @@ async fn get_trade_partner_list(
     _: AuthExtractor,
     _: AdminExtractor,
 ) -> impl Responder {
-    let list = TradePartner::get_all(**db_pool);
+    let list = TradePartner::get_all((**db_pool).clone());
     HttpResponse::Ok().json(
         list.into_iter()
             .map(|trade_partner| TradePartnerAdminBody {
@@ -92,7 +92,7 @@ async fn get_trade_partner(
     _: AdminExtractor,
 ) -> impl Responder {
     let trade_partner_id = path.into_inner();
-    match TradePartner::find_by_id(**db_pool, trade_partner_id) {
+    match TradePartner::find_by_id((**db_pool).clone(), trade_partner_id) {
         None => HttpResponse::NotFound().finish(),
         Some(trade_partner) => HttpResponse::Ok().json(gets::get_trade_partner(trade_partner)),
     }
@@ -122,14 +122,14 @@ async fn modify_trade_partner(
     _: AdminExtractor,
 ) -> impl Responder {
     let trade_partner_id = path.into_inner();
-    match TradePartner::find_by_id(**db_pool, trade_partner_id) {
+    match TradePartner::find_by_id((**db_pool).clone(), trade_partner_id) {
         None => HttpResponse::NotFound().finish(),
         Some(mut trade_partner) => {
             // There should be data validation
             if body.name != "_" {
                 trade_partner.name = body.name.clone()
             }
-            if TradePartner::save(**db_pool, trade_partner) {
+            if TradePartner::save((**db_pool).clone(), trade_partner) {
                 HttpResponse::Ok().finish()
             } else {
                 HttpResponse::BadRequest().finish()
@@ -157,7 +157,7 @@ async fn delete_trade_partner(
 ) -> impl Responder {
     let trade_partner_id = path.into_inner();
 
-    if TradePartner::delete(**db_pool, trade_partner_id) {
+    if TradePartner::delete((**db_pool).clone(), trade_partner_id) {
         HttpResponse::Ok().finish()
     } else {
         HttpResponse::NotFound().finish()
@@ -182,7 +182,7 @@ async fn get_price_list(
     _: AdminExtractor,
 ) -> impl Responder {
     let trade_partner_id = path.into_inner();
-    match TradePartner::find_by_id(**db_pool, trade_partner_id) {
+    match TradePartner::find_by_id((**db_pool).clone(), trade_partner_id) {
         None => HttpResponse::NotFound().finish(),
         Some(trade_partner) => HttpResponse::Ok().json(gets::get_price_list(trade_partner)),
     }
@@ -207,7 +207,7 @@ async fn get_price(
 ) -> impl Responder {
     let (trade_partner_id, size) = path.into_inner();
 
-    match TradePartner::find_by_id(**db_pool, trade_partner_id) {
+    match TradePartner::find_by_id((**db_pool).clone(), trade_partner_id) {
         None => HttpResponse::NotFound().finish(),
         Some(trade_partner) => gets::get_price(trade_partner, size),
     }
@@ -238,7 +238,7 @@ async fn add_price(
 ) -> impl Responder {
     let (trade_partner_id, size) = path.into_inner();
 
-    match TradePartner::find_by_id(**db_pool, trade_partner_id) {
+    match TradePartner::find_by_id((**db_pool).clone(), trade_partner_id) {
         None => HttpResponse::NotFound().finish(),
         Some(mut trade_partner) => {
             // There should be data validation
@@ -254,7 +254,7 @@ async fn add_price(
                     trade_partner
                         .price_list
                         .replace(size, Money::from_decimal(price, currency));
-                    if TradePartner::save(**db_pool, trade_partner) {
+                    if TradePartner::save((**db_pool).clone(), trade_partner) {
                         HttpResponse::Ok().finish()
                     } else {
                         HttpResponse::BadRequest().finish()
@@ -285,11 +285,11 @@ async fn delete_price(
 ) -> impl Responder {
     let (trade_partner_id, size) = path.into_inner();
 
-    match TradePartner::find_by_id(**db_pool, trade_partner_id) {
+    match TradePartner::find_by_id((**db_pool).clone(), trade_partner_id) {
         None => HttpResponse::NotFound().finish(),
         Some(mut trade_partner) => {
             trade_partner.price_list.delete(size);
-            if TradePartner::save(**db_pool, trade_partner) {
+            if TradePartner::save((**db_pool).clone(), trade_partner) {
                 HttpResponse::Ok().finish()
             } else {
                 HttpResponse::BadRequest().finish()
@@ -316,9 +316,12 @@ async fn get_warehouse_list(
     _: AdminExtractor,
 ) -> impl Responder {
     let trade_partner_id = path.into_inner();
-    match TradePartner::find_by_id(**db_pool, trade_partner_id) {
+    match TradePartner::find_by_id((**db_pool).clone(), trade_partner_id) {
         None => HttpResponse::NotFound().finish(),
-        Some(_) => HttpResponse::Ok().json(gets::get_warehouse_list(**db_pool, trade_partner_id)),
+        Some(_) => HttpResponse::Ok().json(gets::get_warehouse_list(
+            (**db_pool).clone(),
+            trade_partner_id,
+        )),
     }
 }
 
@@ -340,7 +343,7 @@ async fn get_warehouse(
     _: AdminExtractor,
 ) -> impl Responder {
     let (trade_partner_id, warehouse_id) = path.into_inner();
-    gets::get_warehouse(**db_pool, trade_partner_id, warehouse_id)
+    gets::get_warehouse((**db_pool).clone(), trade_partner_id, warehouse_id)
 }
 
 #[utoipa::path(
@@ -395,9 +398,14 @@ async fn add_warehouse(
 
     match (body.name.clone(), body.address.clone()) {
         (Some(name), Some(address)) => match (address.street, address.city, address.postal_code) {
-            (Some(street), Some(city), Some(postal_code)) => {
-                add(**db_pool, trade_partner_id, name, street, city, postal_code)
-            }
+            (Some(street), Some(city), Some(postal_code)) => add(
+                (**db_pool).clone(),
+                trade_partner_id,
+                name,
+                street,
+                city,
+                postal_code,
+            ),
             (_, _, _) => HttpResponse::BadRequest().finish(),
         },
         (_, _) => HttpResponse::BadRequest().finish(),
@@ -429,14 +437,15 @@ async fn modify_warehouse(
 ) -> impl Responder {
     let (trade_partner_id, warehouse_id) = path.into_inner();
 
-    if let Some((_, mut warehouse)) = Warehouse::find_by_trade_partner(**db_pool, trade_partner_id)
-        .into_iter()
-        .enumerate()
-        .filter(|(id, _)| *id as i32 == warehouse_id)
-        .next()
+    if let Some((_, mut warehouse)) =
+        Warehouse::find_by_trade_partner((**db_pool).clone(), trade_partner_id)
+            .into_iter()
+            .enumerate()
+            .filter(|(id, _)| *id as i32 == warehouse_id)
+            .next()
     {
         if let Some(body_address) = &body.address {
-            let address = Address::find_by_id(**db_pool, warehouse.address_id);
+            let address = Address::find_by_id((**db_pool).clone(), warehouse.address_id);
             if address.is_none() {
                 return HttpResponse::InternalServerError().finish();
             }
@@ -451,14 +460,14 @@ async fn modify_warehouse(
             if let Some(postal_code) = &body_address.postal_code {
                 address.postal_code = postal_code.clone()
             }
-            if !Address::save(**db_pool, address) {
+            if !Address::save((**db_pool).clone(), address) {
                 return HttpResponse::BadRequest().finish();
             }
         }
         if let Some(name) = &body.name {
             warehouse.name = name.clone()
         }
-        if Warehouse::save(**db_pool, warehouse) {
+        if Warehouse::save((**db_pool).clone(), warehouse) {
             HttpResponse::Ok().finish()
         } else {
             HttpResponse::BadRequest().finish()
@@ -487,7 +496,7 @@ async fn delete_warehouse(
 ) -> impl Responder {
     let (trade_partner_id, warehouse_id) = path.into_inner();
 
-    let warehouse_opt = Warehouse::find_by_trade_partner(**db_pool, trade_partner_id)
+    let warehouse_opt = Warehouse::find_by_trade_partner((**db_pool).clone(), trade_partner_id)
         .into_iter()
         .enumerate()
         .filter(|(id, _)| *id as i32 == warehouse_id)
@@ -495,9 +504,9 @@ async fn delete_warehouse(
     match warehouse_opt {
         None => HttpResponse::NotFound().finish(),
         Some((_, warehouse)) => {
-            Address::delete(**db_pool, warehouse.address_id);
+            Address::delete((**db_pool).clone(), warehouse.address_id);
 
-            if Warehouse::delete(**db_pool, warehouse.id) {
+            if Warehouse::delete((**db_pool).clone(), warehouse.id) {
                 HttpResponse::Ok().finish()
             } else {
                 HttpResponse::NotFound().finish()

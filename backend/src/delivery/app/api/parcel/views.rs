@@ -30,10 +30,11 @@ type Pool = IMPool;
 #[get("/{parcel_id}")]
 async fn get_parcel(db_pool: web::Data<Pool>, path: web::Path<i32>) -> impl Responder {
     let parcel_id = path.into_inner();
-    match Parcel::find_by_id(**db_pool, parcel_id) {
+    match Parcel::find_by_id((**db_pool).clone(), parcel_id) {
         None => HttpResponse::NotFound().finish(),
         Some(parcel) => {
-            let address = Address::find_by_id(**db_pool, parcel.recipient_address_id).unwrap();
+            let address =
+                Address::find_by_id((**db_pool).clone(), parcel.recipient_address_id).unwrap();
             HttpResponse::Ok().json(ParcelBody {
                 recipient_name: parcel.recipient_name,
                 recipient_email: parcel.recipient_email,
@@ -45,7 +46,7 @@ async fn get_parcel(db_pool: web::Data<Pool>, path: web::Path<i32>) -> impl Resp
                     city: address.city,
                     postal_code: address.postal_code,
                 },
-                status_list: StatusRecord::find_by_parcel_id(**db_pool, parcel_id)
+                status_list: StatusRecord::find_by_parcel_id((**db_pool).clone(), parcel_id)
                     .into_iter()
                     .map(|status_record| StatusBody {
                         status: status_record.status,
@@ -85,12 +86,12 @@ async fn add_parcel(
     match (
         NaiveDate::parse_from_str(body.pickup_date.as_str(), "%d-%m-%Y"),
         Warehouse::find_by_trade_partner_and_id(
-            **db_pool,
+            (**db_pool).clone(),
             extractor.trade_partner_id,
             body.warehouse_id,
         ),
         Address::insert(
-            **db_pool,
+            (**db_pool).clone(),
             Address::new(
                 body.recipient_address.street.clone(),
                 body.recipient_address.city.clone(),
@@ -99,7 +100,7 @@ async fn add_parcel(
         ),
     ) {
         (Ok(date), Some(warehouse), Some(address_id)) => match Parcel::insert(
-            **db_pool,
+            (**db_pool).clone(),
             Parcel::new(
                 body.recipient_name.clone(),
                 body.recipient_email.clone(),
@@ -140,7 +141,10 @@ async fn courier_add_status(
     _: CourierExtractor,
 ) -> impl Responder {
     let parcel_id = path.into_inner();
-    match StatusRecord::insert(**db_pool, StatusRecord::new(parcel_id, parcel_status.0)) {
+    match StatusRecord::insert(
+        (**db_pool).clone(),
+        StatusRecord::new(parcel_id, parcel_status.0),
+    ) {
         None => HttpResponse::BadRequest().finish(),
         Some(_) => HttpResponse::Ok().finish(),
     }
@@ -166,12 +170,12 @@ async fn modify_parcel(
     body: web::Json<ModifyParcelRequest>,
 ) -> impl Responder {
     let parcel_id = path.into_inner();
-    match Parcel::find_by_id(**db_pool, parcel_id) {
+    match Parcel::find_by_id((**db_pool).clone(), parcel_id) {
         None => HttpResponse::NotFound().finish(),
         Some(mut parcel) => {
             if let Some(address) = &body.address {
                 match Address::insert(
-                    **db_pool,
+                    (**db_pool).clone(),
                     Address::new(
                         address.street.clone(),
                         address.city.clone(),
@@ -181,7 +185,7 @@ async fn modify_parcel(
                     None => return HttpResponse::BadRequest().finish(),
                     Some(address_id) => {
                         match StatusRecord::insert(
-                            **db_pool,
+                            (**db_pool).clone(),
                             StatusRecord::new(
                                 parcel_id,
                                 ParcelStatus::ChangedAddress(parcel.recipient_address_id),
@@ -190,7 +194,7 @@ async fn modify_parcel(
                             None => return HttpResponse::BadRequest().finish(),
                             Some(_) => parcel.recipient_address_id = address_id,
                         }
-                        if !Parcel::save(**db_pool, parcel) {
+                        if !Parcel::save((**db_pool).clone(), parcel) {
                             return HttpResponse::BadRequest().finish();
                         }
                     }
@@ -198,7 +202,7 @@ async fn modify_parcel(
             }
             if let Some(requested_date) = &body.requested_date {
                 if StatusRecord::insert(
-                    **db_pool,
+                    (**db_pool).clone(),
                     StatusRecord::new(
                         parcel_id,
                         ParcelStatus::RequestedDelivery(requested_date.clone()),
