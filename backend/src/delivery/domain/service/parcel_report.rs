@@ -94,9 +94,10 @@ pub struct ParcelDeliveryReport;
 
 impl ParcelDeliveryReport {
     pub fn gen_report(db_pool: Pool, date: NaiveDate) -> DeliveryReport {
-        let parcels = StatusRecord::find_by_status(ParcelStatus::ExpectedDelivery(
-            date.format("%d-%m-%Y").to_string(),
-        ))
+        let parcels = StatusRecord::find_by_status(
+            db_pool,
+            ParcelStatus::ExpectedDelivery(date.format("%d-%m-%Y").to_string()),
+        )
         .into_iter()
         .map(|status_record| status_record.parcel_id)
         .collect::<Vec<usize>>();

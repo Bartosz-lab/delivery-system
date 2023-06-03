@@ -1,7 +1,8 @@
 use std::sync::Mutex;
 
-use crate::delivery::domain::{
-    repository::StatusRecordTrait, value_objects::ParcelStatus, StatusRecord,
+use crate::{
+    delivery::domain::{repository::StatusRecordTrait, value_objects::ParcelStatus, StatusRecord},
+    IMPool,
 };
 
 struct StatusRecordRepository {
@@ -25,8 +26,8 @@ lazy_static! {
     };
 }
 
-impl StatusRecordTrait for StatusRecord {
-    fn insert(status_record: StatusRecord) -> Option<usize> {
+impl StatusRecordTrait<IMPool> for StatusRecord {
+    fn insert(_: IMPool, status_record: StatusRecord) -> Option<usize> {
         let mut status_record = status_record;
         let id = DATA.lock().unwrap().last_id;
         status_record.id = id;
@@ -35,7 +36,7 @@ impl StatusRecordTrait for StatusRecord {
         Some(id)
     }
 
-    fn delete(id: usize) -> bool {
+    fn delete(_: IMPool, id: usize) -> bool {
         let _ = &DATA
             .lock()
             .unwrap()
@@ -44,13 +45,13 @@ impl StatusRecordTrait for StatusRecord {
         true
     }
 
-    fn save(status_record: StatusRecord) -> bool {
-        StatusRecord::delete(status_record.id);
+    fn save(db_pool: IMPool, status_record: StatusRecord) -> bool {
+        StatusRecord::delete(db_pool, status_record.id);
         DATA.lock().unwrap().list.push(status_record);
         true
     }
 
-    fn find_by_id(id: usize) -> Option<StatusRecord> {
+    fn find_by_id(_: IMPool, id: usize) -> Option<StatusRecord> {
         let list = &DATA.lock().unwrap().list;
 
         let list = list
@@ -63,7 +64,7 @@ impl StatusRecordTrait for StatusRecord {
         }
     }
 
-    fn find_by_parcel_id(parcel_id: usize) -> Vec<StatusRecord> {
+    fn find_by_parcel_id(_: IMPool, parcel_id: usize) -> Vec<StatusRecord> {
         let list = &DATA.lock().unwrap().list;
 
         list.into_iter()
@@ -72,7 +73,7 @@ impl StatusRecordTrait for StatusRecord {
             .collect::<Vec<StatusRecord>>()
     }
 
-    fn find_by_status(status: ParcelStatus) -> Vec<StatusRecord> {
+    fn find_by_status(_: IMPool, status: ParcelStatus) -> Vec<StatusRecord> {
         let list = &DATA.lock().unwrap().list;
 
         list.into_iter()

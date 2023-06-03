@@ -45,7 +45,7 @@ async fn get_parcel(db_pool: web::Data<Pool>, path: web::Path<usize>) -> impl Re
                     city: address.city,
                     postal_code: address.postal_code,
                 },
-                status_list: StatusRecord::find_by_parcel_id(parcel_id)
+                status_list: StatusRecord::find_by_parcel_id(**db_pool, parcel_id)
                     .into_iter()
                     .map(|status_record| StatusBody {
                         status: status_record.status,
@@ -129,13 +129,14 @@ async fn add_parcel(
 )]
 #[post("/{parcel_id}/status")]
 async fn courier_add_status(
+    db_pool: web::Data<Pool>,
     path: web::Path<usize>,
     parcel_status: web::Json<ParcelStatus>,
     _: AuthExtractor,
     _: CourierExtractor,
 ) -> impl Responder {
     let parcel_id = path.into_inner();
-    match StatusRecord::insert(StatusRecord::new(parcel_id, parcel_status.0)) {
+    match StatusRecord::insert(**db_pool, StatusRecord::new(parcel_id, parcel_status.0)) {
         None => HttpResponse::BadRequest().finish(),
         Some(_) => HttpResponse::Ok().finish(),
     }
@@ -175,10 +176,13 @@ async fn modify_parcel(
                 ) {
                     None => return HttpResponse::BadRequest().finish(),
                     Some(address_id) => {
-                        match StatusRecord::insert(StatusRecord::new(
-                            parcel_id,
-                            ParcelStatus::ChangedAddress(parcel.recipient_address_id),
-                        )) {
+                        match StatusRecord::insert(
+                            **db_pool,
+                            StatusRecord::new(
+                                parcel_id,
+                                ParcelStatus::ChangedAddress(parcel.recipient_address_id),
+                            ),
+                        ) {
                             None => return HttpResponse::BadRequest().finish(),
                             Some(_) => parcel.recipient_address_id = address_id,
                         }
@@ -189,10 +193,13 @@ async fn modify_parcel(
                 }
             }
             if let Some(requested_date) = &body.requested_date {
-                if StatusRecord::insert(StatusRecord::new(
-                    parcel_id,
-                    ParcelStatus::RequestedDelivery(requested_date.clone()),
-                ))
+                if StatusRecord::insert(
+                    **db_pool,
+                    StatusRecord::new(
+                        parcel_id,
+                        ParcelStatus::RequestedDelivery(requested_date.clone()),
+                    ),
+                )
                 .is_none()
                 {
                     return HttpResponse::BadRequest().finish();
