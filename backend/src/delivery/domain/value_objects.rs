@@ -1,3 +1,4 @@
+use rust_decimal::Decimal;
 use rusty_money::{iso, Money};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -74,4 +75,37 @@ impl PriceList {
         let map = self.map.clone();
         map.into_iter().collect()
     }
+
+    pub fn as_ser_vec(&self) -> Vec<(ParcelSize, SerializeMoney)> {
+        let map = self.map.clone();
+        map.into_iter()
+            .map(|(size, money)| {
+                (
+                    size,
+                    SerializeMoney {
+                        price: *money.amount(),
+                        currency: money.currency().to_string(),
+                    },
+                )
+            })
+            .collect()
+    }
+
+    pub fn from_ser_vec(list: Vec<(ParcelSize, SerializeMoney)>) -> Self {
+        let mut map = HashMap::new();
+
+        for (size, money) in list {
+            map.insert(
+                size,
+                Money::from_decimal(money.price, iso::find(money.currency.as_str()).unwrap()),
+            );
+        }
+        PriceList { map }
+    }
+}
+
+#[derive(Clone, Serialize, Deserialize)]
+pub struct SerializeMoney {
+    price: Decimal,
+    currency: String,
 }

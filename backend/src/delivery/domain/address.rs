@@ -1,7 +1,10 @@
 use serde::{Deserialize, Serialize};
 use utoipa::ToSchema;
 
-#[derive(Clone, Serialize, Deserialize, ToSchema)]
+use crate::schema::addresses;
+
+#[derive(Clone, Serialize, Deserialize, ToSchema, Queryable, Identifiable, AsChangeset)]
+#[diesel(table_name = addresses)]
 pub struct Address {
     pub id: i32,
     #[schema(example = "ul. Piękna 1a")]

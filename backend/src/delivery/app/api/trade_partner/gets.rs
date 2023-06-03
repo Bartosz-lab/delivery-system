@@ -12,10 +12,10 @@ use crate::{
             {Address, TradePartner, Warehouse},
         },
     },
-    IMPool,
+    PgPool,
 };
 
-type Pool = IMPool;
+type Pool = PgPool;
 
 pub fn get_trade_partner(trade_partner: TradePartner) -> TradePartnerBody {
     TradePartnerBody {
@@ -51,11 +51,11 @@ pub fn get_price(trade_partner: TradePartner, size: ParcelSize) -> HttpResponse 
 }
 
 pub fn get_warehouse_list(db_pool: Pool, trade_partner_id: i32) -> Vec<WarehouseBody> {
-    Warehouse::find_by_trade_partner(db_pool, trade_partner_id)
+    Warehouse::find_by_trade_partner(db_pool.clone(), trade_partner_id)
         .into_iter()
         .enumerate()
         .map(|(id, warehouse)| {
-            let address = Address::find_by_id(db_pool, warehouse.address_id).unwrap();
+            let address = Address::find_by_id(db_pool.clone(), warehouse.address_id).unwrap();
             WarehouseBody {
                 id: Some(id as i32),
                 name: Some(warehouse.name),
@@ -70,11 +70,12 @@ pub fn get_warehouse_list(db_pool: Pool, trade_partner_id: i32) -> Vec<Warehouse
 }
 
 pub fn get_warehouse(db_pool: Pool, trade_partner_id: i32, warehouse_id: i32) -> HttpResponse {
-    if let Some((_, warehouse)) = Warehouse::find_by_trade_partner(db_pool, trade_partner_id)
-        .into_iter()
-        .enumerate()
-        .filter(|(id, _)| *id as i32 == warehouse_id)
-        .next()
+    if let Some((_, warehouse)) =
+        Warehouse::find_by_trade_partner(db_pool.clone(), trade_partner_id)
+            .into_iter()
+            .enumerate()
+            .filter(|(id, _)| *id as i32 == warehouse_id)
+            .next()
     {
         if let Some(address) = Address::find_by_id(db_pool, warehouse.address_id) {
             HttpResponse::Ok().json(WarehouseBody {

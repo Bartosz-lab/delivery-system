@@ -15,10 +15,10 @@ use crate::{
             {Address, TradePartner, Warehouse},
         },
     },
-    IMPool,
+    PgPool,
 };
 
-type Pool = IMPool;
+type Pool = PgPool;
 
 #[utoipa::path(
     context_path = "/tradepartner",
@@ -378,7 +378,7 @@ async fn add_warehouse(
         postal_code: String,
     ) -> HttpResponse {
         match Address::insert(
-            db_pool,
+            db_pool.clone(),
             Address::new(street.clone(), city.clone(), postal_code.clone()),
         ) {
             None => HttpResponse::BadRequest().finish(),

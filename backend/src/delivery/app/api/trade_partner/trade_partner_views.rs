@@ -6,10 +6,10 @@ use crate::{
         app::api::trade_partner::gets,
         domain::{repository::TradePartnerTrait, value_objects::ParcelSize, TradePartner},
     },
-    IMPool,
+    PgPool,
 };
 
-type Pool = IMPool;
+type Pool = PgPool;
 
 #[utoipa::path(
     context_path = "/tradepartner",

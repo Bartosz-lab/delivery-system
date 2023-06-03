@@ -1,5 +1,10 @@
 pub mod address_repository_im;
+pub mod address_repository_pg;
 pub mod parcel_repository_im;
+pub mod parcel_repository_pg;
 pub mod status_record_repository_im;
+pub mod status_record_repository_pg;
 pub mod trade_partner_repository_im;
+pub mod trade_partner_repository_pg;
 pub mod warehouse_repository_im;
+pub mod warehouse_repository_pg;
