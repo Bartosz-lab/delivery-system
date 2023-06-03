@@ -36,11 +36,12 @@ type Pool = IMPool;
 )]
 #[post("")]
 async fn add_trade_parnter(
+    db_pool: web::Data<Pool>,
     body: web::Json<TradePartnerBody>,
     _: AuthExtractor,
     _: AdminExtractor,
 ) -> impl Responder {
-    let res = TradePartner::insert(TradePartner::new(body.name.to_owned()));
+    let res = TradePartner::insert(**db_pool, TradePartner::new(body.name.to_owned()));
     match res {
         Some(id) => HttpResponse::Created().json(id),
         None => HttpResponse::BadRequest().finish(),
@@ -57,8 +58,12 @@ async fn add_trade_parnter(
     )
 )]
 #[get("/list")]
-async fn get_trade_partner_list(_: AuthExtractor, _: AdminExtractor) -> impl Responder {
-    let list = TradePartner::get_all();
+async fn get_trade_partner_list(
+    db_pool: web::Data<Pool>,
+    _: AuthExtractor,
+    _: AdminExtractor,
+) -> impl Responder {
+    let list = TradePartner::get_all(**db_pool);
     HttpResponse::Ok().json(
         list.into_iter()
             .map(|trade_partner| TradePartnerAdminBody {
@@ -81,12 +86,13 @@ async fn get_trade_partner_list(_: AuthExtractor, _: AdminExtractor) -> impl Res
 )]
 #[get("/{trade_partner_id}")]
 async fn get_trade_partner(
+    db_pool: web::Data<Pool>,
     path: web::Path<usize>,
     _: AuthExtractor,
     _: AdminExtractor,
 ) -> impl Responder {
     let trade_partner_id = path.into_inner();
-    match TradePartner::find_by_id(trade_partner_id) {
+    match TradePartner::find_by_id(**db_pool, trade_partner_id) {
         None => HttpResponse::NotFound().finish(),
         Some(trade_partner) => HttpResponse::Ok().json(gets::get_trade_partner(trade_partner)),
     }
@@ -109,20 +115,21 @@ async fn get_trade_partner(
 )]
 #[put("/{trade_partner_id}")]
 async fn modify_trade_partner(
+    db_pool: web::Data<Pool>,
     path: web::Path<usize>,
     body: web::Json<TradePartnerBody>,
     _: AuthExtractor,
     _: AdminExtractor,
 ) -> impl Responder {
     let trade_partner_id = path.into_inner();
-    match TradePartner::find_by_id(trade_partner_id) {
+    match TradePartner::find_by_id(**db_pool, trade_partner_id) {
         None => HttpResponse::NotFound().finish(),
         Some(mut trade_partner) => {
             // There should be data validation
             if body.name != "_" {
                 trade_partner.name = body.name.clone()
             }
-            if TradePartner::save(trade_partner) {
+            if TradePartner::save(**db_pool, trade_partner) {
                 HttpResponse::Ok().finish()
             } else {
                 HttpResponse::BadRequest().finish()
@@ -143,13 +150,14 @@ async fn modify_trade_partner(
 )]
 #[delete("/{trade_partner_id}")]
 async fn delete_trade_partner(
+    db_pool: web::Data<Pool>,
     path: web::Path<usize>,
     _: AuthExtractor,
     _: AdminExtractor,
 ) -> impl Responder {
     let trade_partner_id = path.into_inner();
 
-    if TradePartner::delete(trade_partner_id) {
+    if TradePartner::delete(**db_pool, trade_partner_id) {
         HttpResponse::Ok().finish()
     } else {
         HttpResponse::NotFound().finish()
@@ -168,12 +176,13 @@ async fn delete_trade_partner(
 )]
 #[get("/{trade_partner_id}/pricelist")]
 async fn get_price_list(
+    db_pool: web::Data<Pool>,
     path: web::Path<usize>,
     _: AuthExtractor,
     _: AdminExtractor,
 ) -> impl Responder {
     let trade_partner_id = path.into_inner();
-    match TradePartner::find_by_id(trade_partner_id) {
+    match TradePartner::find_by_id(**db_pool, trade_partner_id) {
         None => HttpResponse::NotFound().finish(),
         Some(trade_partner) => HttpResponse::Ok().json(gets::get_price_list(trade_partner)),
     }
@@ -191,13 +200,14 @@ async fn get_price_list(
 )]
 #[get("/{trade_partner_id}/pricelist/{size}")]
 async fn get_price(
+    db_pool: web::Data<Pool>,
     path: web::Path<(usize, ParcelSize)>,
     _: AuthExtractor,
     _: AdminExtractor,
 ) -> impl Responder {
     let (trade_partner_id, size) = path.into_inner();
 
-    match TradePartner::find_by_id(trade_partner_id) {
+    match TradePartner::find_by_id(**db_pool, trade_partner_id) {
         None => HttpResponse::NotFound().finish(),
         Some(trade_partner) => gets::get_price(trade_partner, size),
     }
@@ -220,6 +230,7 @@ async fn get_price(
 )]
 #[post("/{trade_partner_id}/pricelist/{size}")]
 async fn add_price(
+    db_pool: web::Data<Pool>,
     body: web::Json<MoneyBody>,
     path: web::Path<(usize, ParcelSize)>,
     _: AuthExtractor,
@@ -227,7 +238,7 @@ async fn add_price(
 ) -> impl Responder {
     let (trade_partner_id, size) = path.into_inner();
 
-    match TradePartner::find_by_id(trade_partner_id) {
+    match TradePartner::find_by_id(**db_pool, trade_partner_id) {
         None => HttpResponse::NotFound().finish(),
         Some(mut trade_partner) => {
             // There should be data validation
@@ -243,7 +254,7 @@ async fn add_price(
                     trade_partner
                         .price_list
                         .replace(size, Money::from_decimal(price, currency));
-                    if TradePartner::save(trade_partner) {
+                    if TradePartner::save(**db_pool, trade_partner) {
                         HttpResponse::Ok().finish()
                     } else {
                         HttpResponse::BadRequest().finish()
@@ -267,17 +278,18 @@ async fn add_price(
 )]
 #[delete("/{trade_partner_id}/pricelist/{size}")]
 async fn delete_price(
+    db_pool: web::Data<Pool>,
     path: web::Path<(usize, ParcelSize)>,
     _: AuthExtractor,
     _: AdminExtractor,
 ) -> impl Responder {
     let (trade_partner_id, size) = path.into_inner();
 
-    match TradePartner::find_by_id(trade_partner_id) {
+    match TradePartner::find_by_id(**db_pool, trade_partner_id) {
         None => HttpResponse::NotFound().finish(),
         Some(mut trade_partner) => {
             trade_partner.price_list.delete(size);
-            if TradePartner::save(trade_partner) {
+            if TradePartner::save(**db_pool, trade_partner) {
                 HttpResponse::Ok().finish()
             } else {
                 HttpResponse::BadRequest().finish()
@@ -304,7 +316,7 @@ async fn get_warehouse_list(
     _: AdminExtractor,
 ) -> impl Responder {
     let trade_partner_id = path.into_inner();
-    match TradePartner::find_by_id(trade_partner_id) {
+    match TradePartner::find_by_id(**db_pool, trade_partner_id) {
         None => HttpResponse::NotFound().finish(),
         Some(_) => HttpResponse::Ok().json(gets::get_warehouse_list(**db_pool, trade_partner_id)),
     }

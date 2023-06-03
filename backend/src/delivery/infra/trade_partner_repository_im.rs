@@ -1,9 +1,14 @@
-use crate::delivery::domain::repository::TradePartnerTrait;
-use crate::delivery::domain::value_objects::{ParcelSize, PriceList};
-use crate::delivery::domain::TradePartner;
-
 use rusty_money::{iso, Money};
 use std::sync::Mutex;
+
+use crate::{
+    delivery::domain::{
+        repository::TradePartnerTrait,
+        value_objects::{ParcelSize, PriceList},
+        TradePartner,
+    },
+    IMPool,
+};
 
 struct TradePartnerRepository {
     list: Vec<TradePartner>,
@@ -33,8 +38,8 @@ lazy_static! {
     };
 }
 
-impl TradePartnerTrait for TradePartner {
-    fn insert(tradepartner: TradePartner) -> Option<usize> {
+impl TradePartnerTrait<IMPool> for TradePartner {
+    fn insert(_: IMPool, tradepartner: TradePartner) -> Option<usize> {
         let mut tradepartner = tradepartner;
         let id = DATA.lock().unwrap().last_id;
         tradepartner.id = id;
@@ -43,7 +48,7 @@ impl TradePartnerTrait for TradePartner {
         Some(id)
     }
 
-    fn delete(id: usize) -> bool {
+    fn delete(_: IMPool, id: usize) -> bool {
         let _ = &DATA
             .lock()
             .unwrap()
@@ -52,13 +57,13 @@ impl TradePartnerTrait for TradePartner {
         true
     }
 
-    fn save(tradepartner: TradePartner) -> bool {
-        TradePartner::delete(tradepartner.id);
+    fn save(db_pool: IMPool, tradepartner: TradePartner) -> bool {
+        TradePartner::delete(db_pool, tradepartner.id);
         DATA.lock().unwrap().list.push(tradepartner);
         true
     }
 
-    fn find_by_id(id: usize) -> Option<TradePartner> {
+    fn find_by_id(_: IMPool, id: usize) -> Option<TradePartner> {
         let list = &DATA.lock().unwrap().list;
 
         let list = list
@@ -71,7 +76,7 @@ impl TradePartnerTrait for TradePartner {
         }
     }
 
-    fn get_all() -> Vec<TradePartner> {
+    fn get_all(_: IMPool) -> Vec<TradePartner> {
         DATA.lock().unwrap().list.clone()
     }
 }

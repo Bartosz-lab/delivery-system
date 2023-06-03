@@ -21,8 +21,12 @@ type Pool = IMPool;
     )
 )]
 #[get("")]
-async fn get_trade_partner(_: AuthExtractor, extractor: TradePartnerExtractor) -> impl Responder {
-    match TradePartner::find_by_id(extractor.trade_partner_id) {
+async fn get_trade_partner(
+    db_pool: web::Data<Pool>,
+    _: AuthExtractor,
+    extractor: TradePartnerExtractor,
+) -> impl Responder {
+    match TradePartner::find_by_id(**db_pool, extractor.trade_partner_id) {
         None => HttpResponse::InternalServerError().finish(),
         Some(trade_partner) => HttpResponse::Ok().json(gets::get_trade_partner(trade_partner)),
     }
@@ -38,8 +42,12 @@ async fn get_trade_partner(_: AuthExtractor, extractor: TradePartnerExtractor) -
     )
 )]
 #[get("/pricelist")]
-async fn get_price_list(_: AuthExtractor, extractor: TradePartnerExtractor) -> impl Responder {
-    match TradePartner::find_by_id(extractor.trade_partner_id) {
+async fn get_price_list(
+    db_pool: web::Data<Pool>,
+    _: AuthExtractor,
+    extractor: TradePartnerExtractor,
+) -> impl Responder {
+    match TradePartner::find_by_id(**db_pool, extractor.trade_partner_id) {
         None => HttpResponse::InternalServerError().finish(),
         Some(trade_partner) => HttpResponse::Ok().json(gets::get_price_list(trade_partner)),
     }
@@ -60,13 +68,14 @@ async fn get_price_list(_: AuthExtractor, extractor: TradePartnerExtractor) -> i
 )]
 #[get("/pricelist/{size}")]
 async fn get_price(
+    db_pool: web::Data<Pool>,
     path: web::Path<ParcelSize>,
     _: AuthExtractor,
     extractor: TradePartnerExtractor,
 ) -> impl Responder {
     let size = path.into_inner();
 
-    match TradePartner::find_by_id(extractor.trade_partner_id) {
+    match TradePartner::find_by_id(**db_pool, extractor.trade_partner_id) {
         None => HttpResponse::InternalServerError().finish(),
         Some(trade_partner) => gets::get_price(trade_partner, size),
     }

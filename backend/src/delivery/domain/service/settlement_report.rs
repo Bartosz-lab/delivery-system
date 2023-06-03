@@ -34,7 +34,7 @@ impl SettlementReport {
                 .collect()
         }
 
-        let trade_partner = TradePartner::find_by_id(trade_partner_id);
+        let trade_partner = TradePartner::find_by_id(db_pool, trade_partner_id);
         if trade_partner.is_none() {
             return None;
         }
