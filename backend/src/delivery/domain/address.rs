@@ -3,7 +3,7 @@ use utoipa::ToSchema;
 
 #[derive(Clone, Serialize, Deserialize, ToSchema)]
 pub struct Address {
-    pub id: usize,
+    pub id: i32,
     #[schema(example = "ul. Piękna 1a")]
     pub street: String,
     #[schema(example = "Wrocław")]

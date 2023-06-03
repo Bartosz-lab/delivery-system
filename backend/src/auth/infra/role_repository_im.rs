@@ -8,7 +8,7 @@ use std::sync::Mutex;
 #[derive(Debug, PartialEq, Clone)]
 struct RoleRow {
     role: Role,
-    user_id: usize,
+    user_id: i32,
 }
 
 struct RoleRepository {
@@ -33,7 +33,7 @@ lazy_static! {
 }
 
 impl RoleTrait<IMPool> for Role {
-    fn attach_user(&self, _: IMPool, user_id: usize) {
+    fn attach_user(&self, _: IMPool, user_id: i32) {
         DATA.lock().unwrap().roles.push(RoleRow {
             role: self.clone(),
             user_id,
@@ -41,21 +41,21 @@ impl RoleTrait<IMPool> for Role {
         println!("{:?}", DATA.lock().unwrap().roles);
     }
 
-    fn detach_user(&self, _: IMPool, user_id: usize) {
+    fn detach_user(&self, _: IMPool, user_id: i32) {
         DATA.lock()
             .unwrap()
             .roles
             .retain(|role_row| role_row.user_id == user_id && role_row.role == self.clone())
     }
 
-    fn check_user(&self, _: IMPool, user_id: usize) -> bool {
+    fn check_user(&self, _: IMPool, user_id: i32) -> bool {
         DATA.lock().unwrap().roles.contains(&RoleRow {
             role: self.clone(),
             user_id,
         })
     }
 
-    fn get_user_roles(_: IMPool, user_id: usize) -> Option<Vec<Role>> {
+    fn get_user_roles(_: IMPool, user_id: i32) -> Option<Vec<Role>> {
         Some(
             DATA.lock()
                 .unwrap()

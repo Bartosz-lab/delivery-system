@@ -7,7 +7,7 @@ use crate::{
 
 struct StatusRecordRepository {
     list: Vec<StatusRecord>,
-    last_id: usize,
+    last_id: i32,
 }
 
 lazy_static! {
@@ -27,7 +27,7 @@ lazy_static! {
 }
 
 impl StatusRecordTrait<IMPool> for StatusRecord {
-    fn insert(_: IMPool, status_record: StatusRecord) -> Option<usize> {
+    fn insert(_: IMPool, status_record: StatusRecord) -> Option<i32> {
         let mut status_record = status_record;
         let id = DATA.lock().unwrap().last_id;
         status_record.id = id;
@@ -36,7 +36,7 @@ impl StatusRecordTrait<IMPool> for StatusRecord {
         Some(id)
     }
 
-    fn delete(_: IMPool, id: usize) -> bool {
+    fn delete(_: IMPool, id: i32) -> bool {
         let _ = &DATA
             .lock()
             .unwrap()
@@ -51,7 +51,7 @@ impl StatusRecordTrait<IMPool> for StatusRecord {
         true
     }
 
-    fn find_by_id(_: IMPool, id: usize) -> Option<StatusRecord> {
+    fn find_by_id(_: IMPool, id: i32) -> Option<StatusRecord> {
         let list = &DATA.lock().unwrap().list;
 
         let list = list
@@ -64,7 +64,7 @@ impl StatusRecordTrait<IMPool> for StatusRecord {
         }
     }
 
-    fn find_by_parcel_id(_: IMPool, parcel_id: usize) -> Vec<StatusRecord> {
+    fn find_by_parcel_id(_: IMPool, parcel_id: i32) -> Vec<StatusRecord> {
         let list = &DATA.lock().unwrap().list;
 
         list.into_iter()

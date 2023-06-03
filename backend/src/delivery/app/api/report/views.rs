@@ -58,7 +58,7 @@ async fn trade_partner_settlement_report(
 #[get("/settlement/{start_date}/{end_date}/{trade_partner_id}")]
 async fn trade_partner_settlement_report_admin(
     db_pool: web::Data<Pool>,
-    path: web::Path<(String, String, usize)>,
+    path: web::Path<(String, String, i32)>,
     _: AuthExtractor,
     _: AdminExtractor,
 ) -> impl Responder {

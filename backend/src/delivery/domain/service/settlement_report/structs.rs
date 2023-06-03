@@ -18,7 +18,7 @@ pub struct SettlementTotalReport {
 #[derive(Serialize, Deserialize, ToSchema, Clone)]
 pub struct SettlementWarehouseReport {
     #[schema(example = 1)]
-    pub warehouse_id: usize,
+    pub warehouse_id: i32,
     pub sizes: Vec<SettlementSizeReport>,
     pub price: MoneyBody,
     #[schema(example = 1)]
@@ -31,7 +31,7 @@ pub struct SettlementSizeReport {
     pub size: ParcelSize,
     pub unit_price: MoneyBody,
     #[schema(example = json![vec![1]])]
-    pub parcels_id: Vec<usize>,
+    pub parcels_id: Vec<i32>,
     pub price: MoneyBody,
     #[schema(example = 1)]
     pub parcels_num: usize,

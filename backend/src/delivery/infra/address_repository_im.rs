@@ -7,7 +7,7 @@ use std::sync::Mutex;
 
 struct AddressRepository {
     list: Vec<Address>,
-    last_id: usize,
+    last_id: i32,
 }
 
 lazy_static! {
@@ -44,7 +44,7 @@ lazy_static! {
 }
 
 impl AddressTrait<IMPool> for Address {
-    fn insert(_: IMPool, address: Address) -> Option<usize> {
+    fn insert(_: IMPool, address: Address) -> Option<i32> {
         let mut address = address;
         let id = DATA.lock().unwrap().last_id;
         address.id = id;
@@ -53,7 +53,7 @@ impl AddressTrait<IMPool> for Address {
         Some(id)
     }
 
-    fn delete(_: IMPool, id: usize) -> bool {
+    fn delete(_: IMPool, id: i32) -> bool {
         let _ = &DATA
             .lock()
             .unwrap()
@@ -68,7 +68,7 @@ impl AddressTrait<IMPool> for Address {
         true
     }
 
-    fn find_by_id(_: IMPool, id: usize) -> Option<Address> {
+    fn find_by_id(_: IMPool, id: i32) -> Option<Address> {
         let list = &DATA.lock().unwrap().list;
 
         let list = list

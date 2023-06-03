@@ -50,14 +50,14 @@ pub fn get_price(trade_partner: TradePartner, size: ParcelSize) -> HttpResponse 
     }
 }
 
-pub fn get_warehouse_list(db_pool: Pool, trade_partner_id: usize) -> Vec<WarehouseBody> {
+pub fn get_warehouse_list(db_pool: Pool, trade_partner_id: i32) -> Vec<WarehouseBody> {
     Warehouse::find_by_trade_partner(db_pool, trade_partner_id)
         .into_iter()
         .enumerate()
         .map(|(id, warehouse)| {
             let address = Address::find_by_id(db_pool, warehouse.address_id).unwrap();
             WarehouseBody {
-                id: Some(id),
+                id: Some(id as i32),
                 name: Some(warehouse.name),
                 address: Some(AddressBody {
                     street: Some(address.street),
@@ -69,11 +69,11 @@ pub fn get_warehouse_list(db_pool: Pool, trade_partner_id: usize) -> Vec<Warehou
         .collect()
 }
 
-pub fn get_warehouse(db_pool: Pool, trade_partner_id: usize, warehouse_id: usize) -> HttpResponse {
+pub fn get_warehouse(db_pool: Pool, trade_partner_id: i32, warehouse_id: i32) -> HttpResponse {
     if let Some((_, warehouse)) = Warehouse::find_by_trade_partner(db_pool, trade_partner_id)
         .into_iter()
         .enumerate()
-        .filter(|(id, _)| *id == warehouse_id)
+        .filter(|(id, _)| *id as i32 == warehouse_id)
         .next()
     {
         if let Some(address) = Address::find_by_id(db_pool, warehouse.address_id) {

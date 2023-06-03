@@ -15,7 +15,7 @@ pub struct TradePartnerBody {
 #[schema(title = "TradePartnerAdmin")]
 pub struct TradePartnerAdminBody {
     #[schema(example = 1)]
-    pub id: usize,
+    pub id: i32,
     #[schema(example = "Y-Kom sp. z o.o.")]
     #[schema(default = "_")]
     pub name: String,
@@ -34,7 +34,7 @@ pub struct MoneyBody {
 #[schema(title = "Warehouse")]
 pub struct WarehouseBody {
     #[schema(example = 1)]
-    pub id: Option<usize>,
+    pub id: Option<i32>,
     #[schema(example = "Magazyn 1")]
     #[schema(default = "_")]
     pub name: Option<String>,

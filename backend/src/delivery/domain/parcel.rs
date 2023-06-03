@@ -4,12 +4,12 @@ use crate::delivery::domain::value_objects::ParcelSize;
 
 #[derive(Clone)]
 pub struct Parcel {
-    pub id: usize,
+    pub id: i32,
     pub recipient_name: String,
     pub recipient_email: String,
     pub recipient_phone: String,
-    pub recipient_address_id: usize,
-    pub warehouse_id: usize,
+    pub recipient_address_id: i32,
+    pub warehouse_id: i32,
     pub pickup_date: NaiveDate,
     pub size: ParcelSize,
 }
@@ -19,8 +19,8 @@ impl Parcel {
         recipient_name: String,
         recipient_email: String,
         recipient_phone: String,
-        recipient_address_id: usize,
-        warehouse_id: usize,
+        recipient_address_id: i32,
+        warehouse_id: i32,
         pickup_date: NaiveDate,
         size: ParcelSize,
     ) -> Self {

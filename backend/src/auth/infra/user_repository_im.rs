@@ -7,7 +7,7 @@ use std::sync::Mutex;
 
 struct UserRepository {
     users: Vec<User>,
-    last_id: usize,
+    last_id: i32,
 }
 
 lazy_static! {
@@ -34,7 +34,7 @@ lazy_static! {
 }
 
 impl UserTrait<IMPool> for User {
-    fn insert(_: IMPool, user: User) -> Option<usize> {
+    fn insert(_: IMPool, user: User) -> Option<i32> {
         let mut user = user;
         let id = DATA.lock().unwrap().last_id;
         user.id = id;
@@ -43,7 +43,7 @@ impl UserTrait<IMPool> for User {
         Some(id)
     }
 
-    fn delete(_: IMPool, user_id: usize) -> bool {
+    fn delete(_: IMPool, user_id: i32) -> bool {
         let _ = &DATA.lock().unwrap().users.retain(|user| user.id != user_id);
         true
     }
@@ -54,7 +54,7 @@ impl UserTrait<IMPool> for User {
         true
     }
 
-    fn find_by_id(_: IMPool, id: usize) -> Option<User> {
+    fn find_by_id(_: IMPool, id: i32) -> Option<User> {
         let users = &DATA.lock().unwrap().users;
 
         let users = users

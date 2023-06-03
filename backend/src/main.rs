@@ -13,12 +13,13 @@ use dotenv::dotenv;
 use std::error::Error;
 use utoipa_swagger_ui::SwaggerUi;
 
-type DbPool = r2d2::Pool<r2d2::ConnectionManager<PgConnection>>;
+type PgPool = r2d2::Pool<r2d2::ConnectionManager<PgConnection>>;
 type IMPool = ();
 
 mod auth;
 mod config;
 mod delivery;
+mod schema;
 
 use config::Config;
 
@@ -84,7 +85,7 @@ async fn main() -> Result<(), impl Error> {
     .await
 }
 
-pub fn initialize_db_pool(database_url: String) -> DbPool {
+pub fn initialize_db_pool(database_url: String) -> PgPool {
     let manager = r2d2::ConnectionManager::<PgConnection>::new(database_url.clone());
     r2d2::Pool::builder()
         .build(manager)

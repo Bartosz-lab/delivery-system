@@ -21,7 +21,7 @@ type Pool = IMPool;
         description = "Create new user",
     ),
     responses(
-        (status = CREATED, body = usize, description = "User created successfully", content_type = "application/json"),
+        (status = CREATED, body = i32, description = "User created successfully", content_type = "application/json"),
         (status = BAD_REQUEST, description = "User not created due to invalid data"),
         (status = UNAUTHORIZED, description = "User isn't logged in"),
         (status = FORBIDDEN, description = "User don't have permissions"),
@@ -105,7 +105,7 @@ async fn view_get_user(db_pool: web::Data<Pool>, auth: AuthExtractor) -> impl Re
 #[get("/{user_id}")]
 async fn view_admin_get_user(
     db_pool: web::Data<Pool>,
-    path: web::Path<usize>,
+    path: web::Path<i32>,
     _: AuthExtractor,
     _: AdminExtractor,
 ) -> impl Responder {
@@ -139,7 +139,7 @@ async fn view_admin_get_user(
 #[put("/{user_id}")]
 async fn view_admin_modify_user(
     db_pool: web::Data<Pool>,
-    path: web::Path<usize>,
+    path: web::Path<i32>,
     body: web::Json<UserBody>,
     _: AuthExtractor,
     _: AdminExtractor,
@@ -162,7 +162,7 @@ async fn view_admin_modify_user(
 #[delete("/{user_id}")]
 async fn view_admin_delete_user(
     db_pool: web::Data<Pool>,
-    path: web::Path<usize>,
+    path: web::Path<i32>,
     _: AuthExtractor,
     _: AdminExtractor,
 ) -> impl Responder {
@@ -179,7 +179,7 @@ async fn view_admin_delete_user(
     }
 }
 
-fn modify_user(db_pool: Pool, user_id: usize, body: web::Json<UserBody>) -> impl Responder {
+fn modify_user(db_pool: Pool, user_id: i32, body: web::Json<UserBody>) -> impl Responder {
     match User::find_by_id(db_pool, user_id) {
         None => HttpResponse::NotFound().finish(),
         Some(mut user) => {

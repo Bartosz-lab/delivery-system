@@ -29,7 +29,7 @@ type Pool = IMPool;
 #[get("/{user_id}/role")]
 async fn view_admin_get_roles(
     db_pool: web::Data<Pool>,
-    path: web::Path<usize>,
+    path: web::Path<i32>,
     _: AuthExtractor,
     _: AdminExtractor,
 ) -> impl Responder {
@@ -58,7 +58,7 @@ async fn view_admin_get_roles(
 async fn view_admin_add_role(
     db_pool: web::Data<Pool>,
     role: web::Json<Role>,
-    path: web::Path<usize>,
+    path: web::Path<i32>,
     _: AuthExtractor,
     _: AdminExtractor,
 ) -> impl Responder {
@@ -86,7 +86,7 @@ async fn view_admin_add_role(
 async fn view_admin_delete_role(
     db_pool: web::Data<Pool>,
     role: web::Json<Role>,
-    path: web::Path<usize>,
+    path: web::Path<i32>,
     _: AuthExtractor,
     _: AdminExtractor,
 ) -> impl Responder {

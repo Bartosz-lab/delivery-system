@@ -37,7 +37,7 @@ pub struct ParcelRequest {
     pub recipient_phone: String,
     pub recipient_address: AddressRequired,
     #[schema(example = 1)]
-    pub warehouse_id: usize,
+    pub warehouse_id: i32,
     #[schema(example = "28-05-2023")]
     pub pickup_date: String,
     #[schema(example = ParcelSize::L)]

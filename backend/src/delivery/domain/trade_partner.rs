@@ -2,7 +2,7 @@ use crate::delivery::domain::value_objects::PriceList;
 
 #[derive(Clone)]
 pub struct TradePartner {
-    pub id: usize,
+    pub id: i32,
     pub name: String,
     pub price_list: PriceList,
 }

@@ -23,8 +23,8 @@ impl SettlementReport {
         db_pool: Pool,
         start_date: NaiveDate,
         end_date: NaiveDate,
-        trade_partner_id: usize,
-        warehouses_id: Vec<usize>,
+        trade_partner_id: i32,
+        warehouses_id: Vec<i32>,
     ) -> Option<SettlementTotalReport> {
         let mut warehouses_id = warehouses_id;
         if warehouses_id.len() == 0 {
@@ -104,7 +104,7 @@ impl SettlementReport {
         price_list: PriceList,
         start_date: NaiveDate,
         end_date: NaiveDate,
-        warehouses_id: Vec<(usize, usize)>,
+        warehouses_id: Vec<(i32, i32)>,
     ) -> Vec<(SettlementWarehouseReport, (Decimal, iso::Currency))> {
         warehouses_id
             .into_iter()
@@ -161,7 +161,7 @@ impl SettlementReport {
         price_list: PriceList,
         start_date: NaiveDate,
         end_date: NaiveDate,
-        warehouse_id: usize,
+        warehouse_id: i32,
     ) -> Vec<(SettlementSizeReport, (Decimal, iso::Currency))> {
         ParcelSize::iterator()
             .filter_map(|size| {

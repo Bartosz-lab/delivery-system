@@ -28,7 +28,7 @@ type Pool = IMPool;
         description = "Create new Trade Partner",
     ),
     responses(
-        (status = CREATED, body = usize, description = "Trade Partner created successfully", content_type = "application/json"),
+        (status = CREATED, body = i32, description = "Trade Partner created successfully", content_type = "application/json"),
         (status = BAD_REQUEST, description = "Trade Partner not created due to invalid data"),
         (status = UNAUTHORIZED, description = "User isn't logged in"),
         (status = FORBIDDEN, description = "User don't have permissions"),
@@ -87,7 +87,7 @@ async fn get_trade_partner_list(
 #[get("/{trade_partner_id}")]
 async fn get_trade_partner(
     db_pool: web::Data<Pool>,
-    path: web::Path<usize>,
+    path: web::Path<i32>,
     _: AuthExtractor,
     _: AdminExtractor,
 ) -> impl Responder {
@@ -116,7 +116,7 @@ async fn get_trade_partner(
 #[put("/{trade_partner_id}")]
 async fn modify_trade_partner(
     db_pool: web::Data<Pool>,
-    path: web::Path<usize>,
+    path: web::Path<i32>,
     body: web::Json<TradePartnerBody>,
     _: AuthExtractor,
     _: AdminExtractor,
@@ -151,7 +151,7 @@ async fn modify_trade_partner(
 #[delete("/{trade_partner_id}")]
 async fn delete_trade_partner(
     db_pool: web::Data<Pool>,
-    path: web::Path<usize>,
+    path: web::Path<i32>,
     _: AuthExtractor,
     _: AdminExtractor,
 ) -> impl Responder {
@@ -177,7 +177,7 @@ async fn delete_trade_partner(
 #[get("/{trade_partner_id}/pricelist")]
 async fn get_price_list(
     db_pool: web::Data<Pool>,
-    path: web::Path<usize>,
+    path: web::Path<i32>,
     _: AuthExtractor,
     _: AdminExtractor,
 ) -> impl Responder {
@@ -201,7 +201,7 @@ async fn get_price_list(
 #[get("/{trade_partner_id}/pricelist/{size}")]
 async fn get_price(
     db_pool: web::Data<Pool>,
-    path: web::Path<(usize, ParcelSize)>,
+    path: web::Path<(i32, ParcelSize)>,
     _: AuthExtractor,
     _: AdminExtractor,
 ) -> impl Responder {
@@ -232,7 +232,7 @@ async fn get_price(
 async fn add_price(
     db_pool: web::Data<Pool>,
     body: web::Json<MoneyBody>,
-    path: web::Path<(usize, ParcelSize)>,
+    path: web::Path<(i32, ParcelSize)>,
     _: AuthExtractor,
     _: AdminExtractor,
 ) -> impl Responder {
@@ -279,7 +279,7 @@ async fn add_price(
 #[delete("/{trade_partner_id}/pricelist/{size}")]
 async fn delete_price(
     db_pool: web::Data<Pool>,
-    path: web::Path<(usize, ParcelSize)>,
+    path: web::Path<(i32, ParcelSize)>,
     _: AuthExtractor,
     _: AdminExtractor,
 ) -> impl Responder {
@@ -311,7 +311,7 @@ async fn delete_price(
 #[get("/{trade_partner_id}/warehouse")]
 async fn get_warehouse_list(
     db_pool: web::Data<Pool>,
-    path: web::Path<usize>,
+    path: web::Path<i32>,
     _: AuthExtractor,
     _: AdminExtractor,
 ) -> impl Responder {
@@ -335,7 +335,7 @@ async fn get_warehouse_list(
 #[get("/{trade_partner_id}/warehouse/{warehouse_id}")]
 async fn get_warehouse(
     db_pool: web::Data<Pool>,
-    path: web::Path<(usize, usize)>,
+    path: web::Path<(i32, i32)>,
     _: AuthExtractor,
     _: AdminExtractor,
 ) -> impl Responder {
@@ -351,7 +351,7 @@ async fn get_warehouse(
         description = "Add new Warehouse for Trade Partner",
     ),
     responses(
-        (status = CREATED,  body = usize, description = "Warehouse created successfully", content_type = "application/json"),
+        (status = CREATED,  body = i32, description = "Warehouse created successfully", content_type = "application/json"),
         (status = BAD_REQUEST, description = "Warehouse can't be created due to invalid data"),
         (status = NOT_FOUND, description = "Trade Partner don't exist"),
         (status = UNAUTHORIZED, description = "User isn't logged in"),
@@ -362,13 +362,13 @@ async fn get_warehouse(
 async fn add_warehouse(
     db_pool: web::Data<Pool>,
     body: web::Json<WarehouseBody>,
-    path: web::Path<usize>,
+    path: web::Path<i32>,
     _: AuthExtractor,
     _: AdminExtractor,
 ) -> impl Responder {
     fn add(
         db_pool: Pool,
-        trade_partner_id: usize,
+        trade_partner_id: i32,
         name: String,
         street: String,
         city: String,
@@ -423,7 +423,7 @@ async fn add_warehouse(
 async fn modify_warehouse(
     db_pool: web::Data<Pool>,
     body: web::Json<WarehouseBody>,
-    path: web::Path<(usize, usize)>,
+    path: web::Path<(i32, i32)>,
     _: AuthExtractor,
     _: AdminExtractor,
 ) -> impl Responder {
@@ -432,7 +432,7 @@ async fn modify_warehouse(
     if let Some((_, mut warehouse)) = Warehouse::find_by_trade_partner(**db_pool, trade_partner_id)
         .into_iter()
         .enumerate()
-        .filter(|(id, _)| *id == warehouse_id)
+        .filter(|(id, _)| *id as i32 == warehouse_id)
         .next()
     {
         if let Some(body_address) = &body.address {
@@ -481,7 +481,7 @@ async fn modify_warehouse(
 #[delete("/{trade_partner_id}/warehouse/{warehouse_id}")]
 async fn delete_warehouse(
     db_pool: web::Data<Pool>,
-    path: web::Path<(usize, usize)>,
+    path: web::Path<(i32, i32)>,
     _: AuthExtractor,
     _: AdminExtractor,
 ) -> impl Responder {
@@ -490,7 +490,7 @@ async fn delete_warehouse(
     let warehouse_opt = Warehouse::find_by_trade_partner(**db_pool, trade_partner_id)
         .into_iter()
         .enumerate()
-        .filter(|(id, _)| *id == warehouse_id)
+        .filter(|(id, _)| *id as i32 == warehouse_id)
         .next();
     match warehouse_opt {
         None => HttpResponse::NotFound().finish(),

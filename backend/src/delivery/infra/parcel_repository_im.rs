@@ -8,7 +8,7 @@ use std::sync::Mutex;
 
 struct ParcelRepository {
     list: Vec<Parcel>,
-    last_id: usize,
+    last_id: i32,
 }
 
 lazy_static! {
@@ -41,7 +41,7 @@ lazy_static! {
 }
 
 impl ParcelTrait<IMPool> for Parcel {
-    fn insert(_: IMPool, parcel: Parcel) -> Option<usize> {
+    fn insert(_: IMPool, parcel: Parcel) -> Option<i32> {
         let mut parcel = parcel;
         let id = DATA.lock().unwrap().last_id;
         parcel.id = id;
@@ -50,7 +50,7 @@ impl ParcelTrait<IMPool> for Parcel {
         Some(id)
     }
 
-    fn delete(_: IMPool, id: usize) -> bool {
+    fn delete(_: IMPool, id: i32) -> bool {
         let _ = &DATA
             .lock()
             .unwrap()
@@ -65,7 +65,7 @@ impl ParcelTrait<IMPool> for Parcel {
         true
     }
 
-    fn find_by_id(_: IMPool, id: usize) -> Option<Parcel> {
+    fn find_by_id(_: IMPool, id: i32) -> Option<Parcel> {
         let list = &DATA.lock().unwrap().list;
 
         let list = list
@@ -78,7 +78,7 @@ impl ParcelTrait<IMPool> for Parcel {
         }
     }
 
-    fn find_by_warehouse_id(_: IMPool, warehouse_id: usize) -> Vec<Parcel> {
+    fn find_by_warehouse_id(_: IMPool, warehouse_id: i32) -> Vec<Parcel> {
         let list = &DATA.lock().unwrap().list;
 
         list.into_iter()
@@ -91,7 +91,7 @@ impl ParcelTrait<IMPool> for Parcel {
         _: IMPool,
         start_date: NaiveDate,
         end_date: NaiveDate,
-        warehouse_id: usize,
+        warehouse_id: i32,
         size: ParcelSize,
     ) -> Vec<Parcel> {
         let list = &DATA.lock().unwrap().list;

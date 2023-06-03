@@ -115,7 +115,7 @@ async fn get_warehouse_list(
 #[get("/warehouse/{warehouse_id}")]
 async fn get_warehouse(
     db_pool: web::Data<Pool>,
-    path: web::Path<usize>,
+    path: web::Path<i32>,
     _: AuthExtractor,
     extractor: TradePartnerExtractor,
 ) -> impl Responder {

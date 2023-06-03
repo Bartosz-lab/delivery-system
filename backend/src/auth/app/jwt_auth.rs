@@ -10,7 +10,7 @@ use crate::AppState;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ClaimsData {
-    pub user_id: usize,
+    pub user_id: i32,
     pub roles: Vec<Role>,
 }
 
@@ -121,7 +121,7 @@ impl FromRequest for CourierExtractor {
 }
 
 pub struct TradePartnerExtractor {
-    pub trade_partner_id: usize,
+    pub trade_partner_id: i32,
 }
 
 impl FromRequest for TradePartnerExtractor {
@@ -163,7 +163,7 @@ impl FromRequest for TradePartnerExtractor {
     }
 }
 pub struct TradePartnerApiExtractor {
-    pub trade_partner_id: usize,
+    pub trade_partner_id: i32,
 }
 
 impl FromRequest for TradePartnerApiExtractor {

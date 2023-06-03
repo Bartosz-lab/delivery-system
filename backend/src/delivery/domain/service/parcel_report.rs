@@ -23,7 +23,7 @@ impl ParcelCollectReport {
     pub fn gen_report(
         db_pool: Pool,
         date: NaiveDate,
-        warehouses_id: Vec<usize>,
+        warehouses_id: Vec<i32>,
     ) -> ParcelTotalReport {
         let mut warehouses_id = warehouses_id;
         if warehouses_id.len() == 0 {
@@ -51,7 +51,7 @@ impl ParcelCollectReport {
     fn gen_warehouses(
         db_pool: Pool,
         date: NaiveDate,
-        warehouses_id: Vec<usize>,
+        warehouses_id: Vec<i32>,
     ) -> Vec<ParcelWarehouseReport> {
         warehouses_id
             .into_iter()
@@ -73,7 +73,7 @@ impl ParcelCollectReport {
             .collect()
     }
 
-    fn gen_sizes(db_pool: Pool, date: NaiveDate, warehouse_id: usize) -> Vec<ParcelSizeReport> {
+    fn gen_sizes(db_pool: Pool, date: NaiveDate, warehouse_id: i32) -> Vec<ParcelSizeReport> {
         ParcelSize::iterator()
             .map(|size| {
                 let parcels =
@@ -100,7 +100,7 @@ impl ParcelDeliveryReport {
         )
         .into_iter()
         .map(|status_record| status_record.parcel_id)
-        .collect::<Vec<usize>>();
+        .collect::<Vec<i32>>();
 
         let parcels_num = parcels.len();
 

@@ -7,7 +7,7 @@ use std::sync::Mutex;
 
 struct WarehouseRepository {
     list: Vec<Warehouse>,
-    last_id: usize,
+    last_id: i32,
 }
 
 lazy_static! {
@@ -24,7 +24,7 @@ lazy_static! {
 }
 
 impl WarehouseTrait<IMPool> for Warehouse {
-    fn insert(_: IMPool, warehouse: Warehouse) -> Option<usize> {
+    fn insert(_: IMPool, warehouse: Warehouse) -> Option<i32> {
         let mut warehouse = warehouse;
         let id = DATA.lock().unwrap().last_id;
         warehouse.id = id;
@@ -33,7 +33,7 @@ impl WarehouseTrait<IMPool> for Warehouse {
         Some(id)
     }
 
-    fn delete(_: IMPool, id: usize) -> bool {
+    fn delete(_: IMPool, id: i32) -> bool {
         let _ = &DATA
             .lock()
             .unwrap()
@@ -48,7 +48,7 @@ impl WarehouseTrait<IMPool> for Warehouse {
         true
     }
 
-    fn find_by_id(_: IMPool, id: usize) -> Option<Warehouse> {
+    fn find_by_id(_: IMPool, id: i32) -> Option<Warehouse> {
         let list = &DATA.lock().unwrap().list;
 
         let list = list
@@ -61,7 +61,7 @@ impl WarehouseTrait<IMPool> for Warehouse {
         }
     }
 
-    fn find_by_trade_partner(_: IMPool, trade_partner_id: usize) -> Vec<Warehouse> {
+    fn find_by_trade_partner(_: IMPool, trade_partner_id: i32) -> Vec<Warehouse> {
         let list = &DATA.lock().unwrap().list;
 
         list.into_iter()
@@ -69,7 +69,7 @@ impl WarehouseTrait<IMPool> for Warehouse {
             .enumerate()
             .map(|(id, warehouse)| {
                 let mut new = warehouse.clone();
-                new.id = id;
+                new.id = id as i32;
                 new.clone()
             })
             .collect::<Vec<Warehouse>>()
@@ -77,8 +77,8 @@ impl WarehouseTrait<IMPool> for Warehouse {
 
     fn find_by_trade_partner_and_id(
         _: IMPool,
-        trade_partner_id: usize,
-        warehouse_id: usize,
+        trade_partner_id: i32,
+        warehouse_id: i32,
     ) -> Option<Warehouse> {
         let list = &DATA.lock().unwrap().list;
 
@@ -86,7 +86,7 @@ impl WarehouseTrait<IMPool> for Warehouse {
             .into_iter()
             .filter(|warehouse| warehouse.trade_partner_id == trade_partner_id)
             .enumerate()
-            .filter(|(id, _)| *id == warehouse_id)
+            .filter(|(id, _)| *id as i32 == warehouse_id)
             .next()
         {
             None => None,

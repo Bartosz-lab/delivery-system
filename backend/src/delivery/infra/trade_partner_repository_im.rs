@@ -12,7 +12,7 @@ use crate::{
 
 struct TradePartnerRepository {
     list: Vec<TradePartner>,
-    last_id: usize,
+    last_id: i32,
 }
 
 lazy_static! {
@@ -39,7 +39,7 @@ lazy_static! {
 }
 
 impl TradePartnerTrait<IMPool> for TradePartner {
-    fn insert(_: IMPool, tradepartner: TradePartner) -> Option<usize> {
+    fn insert(_: IMPool, tradepartner: TradePartner) -> Option<i32> {
         let mut tradepartner = tradepartner;
         let id = DATA.lock().unwrap().last_id;
         tradepartner.id = id;
@@ -48,7 +48,7 @@ impl TradePartnerTrait<IMPool> for TradePartner {
         Some(id)
     }
 
-    fn delete(_: IMPool, id: usize) -> bool {
+    fn delete(_: IMPool, id: i32) -> bool {
         let _ = &DATA
             .lock()
             .unwrap()
@@ -63,7 +63,7 @@ impl TradePartnerTrait<IMPool> for TradePartner {
         true
     }
 
-    fn find_by_id(_: IMPool, id: usize) -> Option<TradePartner> {
+    fn find_by_id(_: IMPool, id: i32) -> Option<TradePartner> {
         let list = &DATA.lock().unwrap().list;
 
         let list = list

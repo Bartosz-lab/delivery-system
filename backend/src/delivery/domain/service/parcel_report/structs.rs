@@ -15,7 +15,7 @@ pub struct ParcelTotalReport {
 #[derive(Serialize, Deserialize, ToSchema, Clone)]
 pub struct ParcelWarehouseReport {
     #[schema(example = 1)]
-    pub warehouse_id: usize,
+    pub warehouse_id: i32,
     pub sizes: Vec<ParcelSizeReport>,
     #[schema(example = 1)]
     pub parcels_num: usize,
@@ -25,7 +25,7 @@ pub struct ParcelWarehouseReport {
 pub struct ParcelSizeReport {
     #[schema(example = ParcelSize::L)]
     pub size: ParcelSize,
-    pub parcels_id: Vec<usize>,
+    pub parcels_id: Vec<i32>,
     #[schema(example = 1)]
     pub parcels_num: usize,
 }

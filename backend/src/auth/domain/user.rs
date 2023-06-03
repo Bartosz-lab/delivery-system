@@ -2,10 +2,14 @@ use argon2::{
     password_hash::{rand_core::OsRng, PasswordHash, PasswordHasher, PasswordVerifier, SaltString},
     Argon2,
 };
+use serde::{Deserialize, Serialize};
 
-#[derive(Clone)]
+use crate::schema::users;
+
+#[derive(Debug, Clone, Serialize, Deserialize, Queryable, Insertable)]
+#[diesel(table_name = users)]
 pub struct User {
-    pub id: usize,
+    pub id: i32,
     pub firstname: String,
     pub lastname: String,
     pub email: String,

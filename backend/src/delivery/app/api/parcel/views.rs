@@ -28,7 +28,7 @@ type Pool = IMPool;
     )
 )]
 #[get("/{parcel_id}")]
-async fn get_parcel(db_pool: web::Data<Pool>, path: web::Path<usize>) -> impl Responder {
+async fn get_parcel(db_pool: web::Data<Pool>, path: web::Path<i32>) -> impl Responder {
     let parcel_id = path.into_inner();
     match Parcel::find_by_id(**db_pool, parcel_id) {
         None => HttpResponse::NotFound().finish(),
@@ -68,7 +68,7 @@ async fn get_parcel(db_pool: web::Data<Pool>, path: web::Path<usize>) -> impl Re
         description = "Add new Parcel",
     ),
     responses(
-        (status = CREATED, body = usize, description = "Parcel created successfully", content_type = "application/json"),
+        (status = CREATED, body = i32, description = "Parcel created successfully", content_type = "application/json"),
         (status = BAD_REQUEST, description = "Parcel not created due to invalid data"),
         (status = UNAUTHORIZED, description = "User isn't logged in"),
         (status = FORBIDDEN, description = "User don't have permissions"),
@@ -134,7 +134,7 @@ async fn add_parcel(
 #[post("/{parcel_id}/status")]
 async fn courier_add_status(
     db_pool: web::Data<Pool>,
-    path: web::Path<usize>,
+    path: web::Path<i32>,
     parcel_status: web::Json<ParcelStatus>,
     _: AuthExtractor,
     _: CourierExtractor,
@@ -162,7 +162,7 @@ async fn courier_add_status(
 #[put("/{parcel_id}")]
 async fn modify_parcel(
     db_pool: web::Data<Pool>,
-    path: web::Path<usize>,
+    path: web::Path<i32>,
     body: web::Json<ModifyParcelRequest>,
 ) -> impl Responder {
     let parcel_id = path.into_inner();

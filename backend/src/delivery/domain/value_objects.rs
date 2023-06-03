@@ -12,7 +12,7 @@ pub enum ParcelStatus {
     ExpectedDelivery(String),  // Date as string in format dd-mm-yyyy
     RequestedDelivery(String), // Date as string in format dd-mm-yyyy
     InDelivery,
-    ChangedAddress(usize), //old address id
+    ChangedAddress(i32), //old address id
     Delivered,
 }
 
