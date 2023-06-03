@@ -1,13 +1,13 @@
 use crate::auth::domain::User;
 
-pub trait UserTrait {
-    fn insert(user: User) -> Option<usize>;
+pub trait UserTrait<T> {
+    fn insert(db_pool: T, user: User) -> Option<usize>;
 
-    fn save(user: User) -> bool;
+    fn save(db_pool: T, user: User) -> bool;
 
-    fn delete(id: usize) -> bool;
+    fn delete(db_pool: T, id: usize) -> bool;
 
-    fn find_by_id(id: usize) -> Option<User>;
+    fn find_by_id(db_pool: T, id: usize) -> Option<User>;
 
-    fn find_by_email(email: String) -> Option<User>;
+    fn find_by_email(db_pool: T, email: String) -> Option<User>;
 }

@@ -5,4 +5,21 @@ services:
     build: ./backend
     env_file: ./backend/.env
     ports: 
-       - 8080:8080
+      - 8080:8080
+    depends_on:
+      - db
+  
+  db:
+    restart: always
+    image: postgres:13-alpine
+    environment:
+      POSTGRES_USER: delivery_db
+      POSTGRES_PASSWORD: pass_db
+      POSTGRES_DB: delivery_db
+    volumes:
+      - pgdata:/var/lib/postgresql/data/
+    ports: 
+      - 5432:5432
+
+volumes:
+  pgdata:

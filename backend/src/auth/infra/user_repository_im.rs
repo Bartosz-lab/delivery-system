@@ -1,5 +1,7 @@
-use crate::auth::domain::repository::UserTrait;
-use crate::auth::domain::User;
+use crate::{
+    auth::domain::{repository::UserTrait, User},
+    IMPool,
+};
 
 use std::sync::Mutex;
 
@@ -31,8 +33,8 @@ lazy_static! {
     };
 }
 
-impl UserTrait for User {
-    fn insert(user: User) -> Option<usize> {
+impl UserTrait<IMPool> for User {
+    fn insert(_: IMPool, user: User) -> Option<usize> {
         let mut user = user;
         let id = DATA.lock().unwrap().last_id;
         user.id = id;
@@ -41,18 +43,18 @@ impl UserTrait for User {
         Some(id)
     }
 
-    fn delete(user_id: usize) -> bool {
+    fn delete(_: IMPool, user_id: usize) -> bool {
         let _ = &DATA.lock().unwrap().users.retain(|user| user.id != user_id);
         true
     }
 
-    fn save(user: User) -> bool {
-        User::delete(user.id);
+    fn save(db_pool: IMPool, user: User) -> bool {
+        User::delete(db_pool, user.id);
         DATA.lock().unwrap().users.push(user);
         true
     }
 
-    fn find_by_id(id: usize) -> Option<User> {
+    fn find_by_id(_: IMPool, id: usize) -> Option<User> {
         let users = &DATA.lock().unwrap().users;
 
         let users = users
@@ -65,7 +67,7 @@ impl UserTrait for User {
         }
     }
 
-    fn find_by_email(email: String) -> Option<User> {
+    fn find_by_email(_: IMPool, email: String) -> Option<User> {
         let users = &DATA.lock().unwrap().users;
 
         let users = users

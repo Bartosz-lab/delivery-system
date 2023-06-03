@@ -1,13 +1,20 @@
 #[macro_use]
 extern crate lazy_static;
 
+#[macro_use]
+extern crate diesel;
+
 use actix_web::{
     middleware::{Logger, NormalizePath},
     web, App, HttpServer,
 };
+use diesel::{prelude::*, r2d2};
 use dotenv::dotenv;
 use std::error::Error;
 use utoipa_swagger_ui::SwaggerUi;
+
+type DbPool = r2d2::Pool<r2d2::ConnectionManager<PgConnection>>;
+type IMPool = ();
 
 mod auth;
 mod config;
@@ -26,6 +33,8 @@ async fn main() -> Result<(), impl Error> {
 
     let config = Config::init();
 
+    let pool = initialize_db_pool(config.database_url.clone());
+
     let mut swagger_urls = Vec::new();
     swagger_urls.append(auth::app::api::auth::swagger_urls().as_mut());
     swagger_urls.append(auth::app::api::users::swagger_urls().as_mut());
@@ -37,6 +46,8 @@ async fn main() -> Result<(), impl Error> {
 
     HttpServer::new(move || {
         App::new()
+            .app_data(web::Data::new(pool.clone()))
+            .app_data(web::Data::new(()))
             .app_data(web::Data::new(AppState {
                 env: config.clone(),
             }))
@@ -71,4 +82,11 @@ async fn main() -> Result<(), impl Error> {
     .bind(("0.0.0.0", 8080))?
     .run()
     .await
+}
+
+pub fn initialize_db_pool(database_url: String) -> DbPool {
+    let manager = r2d2::ConnectionManager::<PgConnection>::new(database_url.clone());
+    r2d2::Pool::builder()
+        .build(manager)
+        .expect(format!("Error connecting to {}", database_url).as_str())
 }

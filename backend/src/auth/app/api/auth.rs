@@ -9,15 +9,21 @@ use jsonwebtoken::{encode, EncodingKey, Header};
 use utoipa::OpenApi;
 use utoipa_swagger_ui::Url;
 
-use crate::auth::app::{AuthExtractor, ClaimsData, TokenClaims};
-use crate::auth::domain::{
-    repository::{RoleTrait, UserTrait},
-    Role, User,
+use crate::{
+    auth::{
+        app::{AuthExtractor, ClaimsData, TokenClaims},
+        domain::{
+            repository::{RoleTrait, UserTrait},
+            Role, User,
+        },
+    },
+    AppState, IMPool,
 };
-use crate::AppState;
 
 mod structs;
 use structs::{ChangePassBody, LoginBody};
+
+type Pool = IMPool;
 
 #[derive(OpenApi)]
 #[openapi(
@@ -57,8 +63,12 @@ pub fn config(cfg: &mut web::ServiceConfig) {
     )
 )]
 #[post("/login")]
-async fn login(body: Json<LoginBody>, data: web::Data<AppState>) -> impl Responder {
-    let user = User::find_by_email(body.login.clone());
+async fn login(
+    db_pool: web::Data<Pool>,
+    body: Json<LoginBody>,
+    data: web::Data<AppState>,
+) -> impl Responder {
+    let user = User::find_by_email(**db_pool, body.login.clone());
     match user {
         None => HttpResponse::NotAcceptable().finish(),
         Some(user) => {
@@ -125,14 +135,18 @@ async fn logout(_: AuthExtractor) -> impl Responder {
     )
 )]
 #[post("/changepass")]
-async fn changepass(body: Json<ChangePassBody>, auth: AuthExtractor) -> impl Responder {
-    match User::find_by_id(auth.user.user_id) {
+async fn changepass(
+    db_pool: web::Data<Pool>,
+    body: Json<ChangePassBody>,
+    auth: AuthExtractor,
+) -> impl Responder {
+    match User::find_by_id(**db_pool, auth.user.user_id) {
         None => HttpResponse::InternalServerError().finish(),
         Some(mut user) => {
             // there should be pass validation
             if true {
                 user.set_password(body.password.clone());
-                User::save(user);
+                User::save(**db_pool, user);
                 HttpResponse::Ok().finish()
             } else {
                 HttpResponse::NotAcceptable().finish()

@@ -1,9 +1,17 @@
 use actix_web::{delete, get, post, put, web, web::Json, HttpResponse, Responder};
 
-use crate::auth::app::api::users::structs::{AddUser, UserBody};
-use crate::auth::app::{AdminExtractor, AuthExtractor};
-use crate::auth::domain::repository::UserTrait;
-use crate::auth::domain::User;
+use crate::{
+    auth::{
+        app::{
+            api::users::structs::{AddUser, UserBody},
+            {AdminExtractor, AuthExtractor},
+        },
+        domain::{repository::UserTrait, User},
+    },
+    IMPool,
+};
+
+type Pool = IMPool;
 
 #[utoipa::path(
     context_path = "/user",
@@ -21,16 +29,20 @@ use crate::auth::domain::User;
 )]
 #[post("")]
 async fn view_admin_add_user(
+    db_pool: web::Data<Pool>,
     body: Json<AddUser>,
     _: AuthExtractor,
     _: AdminExtractor,
 ) -> impl Responder {
-    let res = User::insert(User::new(
-        body.firstname.to_owned(),
-        body.lastname.to_owned(),
-        body.email.to_owned(),
-        body.phone.to_owned(),
-    ));
+    let res = User::insert(
+        **db_pool,
+        User::new(
+            body.firstname.to_owned(),
+            body.lastname.to_owned(),
+            body.email.to_owned(),
+            body.phone.to_owned(),
+        ),
+    );
     match res {
         Some(id) => HttpResponse::Created().json(id),
         None => HttpResponse::BadRequest().finish(),
@@ -51,8 +63,12 @@ async fn view_admin_add_user(
     )
 )]
 #[put("")]
-async fn view_modify_user(body: Json<UserBody>, auth: AuthExtractor) -> impl Responder {
-    modify_user(auth.user.user_id, body)
+async fn view_modify_user(
+    db_pool: web::Data<Pool>,
+    body: Json<UserBody>,
+    auth: AuthExtractor,
+) -> impl Responder {
+    modify_user(**db_pool, auth.user.user_id, body)
 }
 
 #[utoipa::path(
@@ -64,8 +80,8 @@ async fn view_modify_user(body: Json<UserBody>, auth: AuthExtractor) -> impl Res
     )
 )]
 #[get("")]
-async fn view_get_user(auth: AuthExtractor) -> impl Responder {
-    match User::find_by_id(auth.user.user_id) {
+async fn view_get_user(db_pool: web::Data<Pool>, auth: AuthExtractor) -> impl Responder {
+    match User::find_by_id(**db_pool, auth.user.user_id) {
         None => HttpResponse::InternalServerError().finish(),
         Some(user) => HttpResponse::Ok().json(UserBody {
             firstname: Some(user.firstname),
@@ -88,12 +104,13 @@ async fn view_get_user(auth: AuthExtractor) -> impl Responder {
 )]
 #[get("/{user_id}")]
 async fn view_admin_get_user(
+    db_pool: web::Data<Pool>,
     path: web::Path<usize>,
     _: AuthExtractor,
     _: AdminExtractor,
 ) -> impl Responder {
     let user_id = path.into_inner();
-    match User::find_by_id(user_id) {
+    match User::find_by_id(**db_pool, user_id) {
         None => HttpResponse::NotFound().finish(),
         Some(user) => HttpResponse::Ok().json(UserBody {
             firstname: Some(user.firstname),
@@ -121,13 +138,14 @@ async fn view_admin_get_user(
 )]
 #[put("/{user_id}")]
 async fn view_admin_modify_user(
+    db_pool: web::Data<Pool>,
     path: web::Path<usize>,
     body: Json<UserBody>,
     _: AuthExtractor,
     _: AdminExtractor,
 ) -> impl Responder {
     let user_id = path.into_inner();
-    modify_user(user_id, body)
+    modify_user(**db_pool, user_id, body)
 }
 
 #[utoipa::path(
@@ -143,15 +161,16 @@ async fn view_admin_modify_user(
 )]
 #[delete("/{user_id}")]
 async fn view_admin_delete_user(
+    db_pool: web::Data<Pool>,
     path: web::Path<usize>,
     _: AuthExtractor,
     _: AdminExtractor,
 ) -> impl Responder {
     let user_id = path.into_inner();
-    match User::find_by_id(user_id) {
+    match User::find_by_id(**db_pool, user_id) {
         None => HttpResponse::NotFound().finish(),
         Some(user) => {
-            if User::delete(user.id) {
+            if User::delete(**db_pool, user.id) {
                 HttpResponse::Ok().finish()
             } else {
                 HttpResponse::BadRequest().finish()
@@ -160,8 +179,8 @@ async fn view_admin_delete_user(
     }
 }
 
-fn modify_user(user_id: usize, body: Json<UserBody>) -> impl Responder {
-    match User::find_by_id(user_id) {
+fn modify_user(db_pool: Pool, user_id: usize, body: Json<UserBody>) -> impl Responder {
+    match User::find_by_id(db_pool, user_id) {
         None => HttpResponse::NotFound().finish(),
         Some(mut user) => {
             // There should be data validation
@@ -177,7 +196,7 @@ fn modify_user(user_id: usize, body: Json<UserBody>) -> impl Responder {
             if let Some(phone) = &body.phone {
                 user.phone = phone.clone();
             }
-            if User::save(user) {
+            if User::save(db_pool, user) {
                 HttpResponse::Ok().finish()
             } else {
                 HttpResponse::BadRequest().finish()
