@@ -84,7 +84,11 @@ async fn add_parcel(
     // There should be data validation
     match (
         NaiveDate::parse_from_str(body.pickup_date.as_str(), "%d-%m-%Y"),
-        Warehouse::find_by_trade_partner_and_id(extractor.trade_partner_id, body.warehouse_id),
+        Warehouse::find_by_trade_partner_and_id(
+            **db_pool,
+            extractor.trade_partner_id,
+            body.warehouse_id,
+        ),
         Address::insert(
             **db_pool,
             Address::new(

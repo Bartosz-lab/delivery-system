@@ -27,7 +27,7 @@ impl ParcelCollectReport {
     ) -> ParcelTotalReport {
         let mut warehouses_id = warehouses_id;
         if warehouses_id.len() == 0 {
-            warehouses_id = Warehouse::get_all()
+            warehouses_id = Warehouse::get_all(db_pool)
                 .into_iter()
                 .map(|warehouse| warehouse.id)
                 .collect()

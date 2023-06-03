@@ -1,5 +1,7 @@
-use crate::delivery::domain::repository::WarehouseTrait;
-use crate::delivery::domain::Warehouse;
+use crate::{
+    delivery::domain::{repository::WarehouseTrait, Warehouse},
+    IMPool,
+};
 
 use std::sync::Mutex;
 
@@ -21,8 +23,8 @@ lazy_static! {
     };
 }
 
-impl WarehouseTrait for Warehouse {
-    fn insert(warehouse: Warehouse) -> Option<usize> {
+impl WarehouseTrait<IMPool> for Warehouse {
+    fn insert(_: IMPool, warehouse: Warehouse) -> Option<usize> {
         let mut warehouse = warehouse;
         let id = DATA.lock().unwrap().last_id;
         warehouse.id = id;
@@ -31,7 +33,7 @@ impl WarehouseTrait for Warehouse {
         Some(id)
     }
 
-    fn delete(id: usize) -> bool {
+    fn delete(_: IMPool, id: usize) -> bool {
         let _ = &DATA
             .lock()
             .unwrap()
@@ -40,13 +42,13 @@ impl WarehouseTrait for Warehouse {
         true
     }
 
-    fn save(warehouse: Warehouse) -> bool {
-        Warehouse::delete(warehouse.id);
+    fn save(db_pool: IMPool, warehouse: Warehouse) -> bool {
+        Warehouse::delete(db_pool, warehouse.id);
         DATA.lock().unwrap().list.push(warehouse);
         true
     }
 
-    fn find_by_id(id: usize) -> Option<Warehouse> {
+    fn find_by_id(_: IMPool, id: usize) -> Option<Warehouse> {
         let list = &DATA.lock().unwrap().list;
 
         let list = list
@@ -59,7 +61,7 @@ impl WarehouseTrait for Warehouse {
         }
     }
 
-    fn find_by_trade_partner(trade_partner_id: usize) -> Vec<Warehouse> {
+    fn find_by_trade_partner(_: IMPool, trade_partner_id: usize) -> Vec<Warehouse> {
         let list = &DATA.lock().unwrap().list;
 
         list.into_iter()
@@ -74,6 +76,7 @@ impl WarehouseTrait for Warehouse {
     }
 
     fn find_by_trade_partner_and_id(
+        _: IMPool,
         trade_partner_id: usize,
         warehouse_id: usize,
     ) -> Option<Warehouse> {
@@ -91,7 +94,7 @@ impl WarehouseTrait for Warehouse {
         }
     }
 
-    fn get_all() -> Vec<Warehouse> {
+    fn get_all(_: IMPool) -> Vec<Warehouse> {
         DATA.lock().unwrap().list.clone()
     }
 }

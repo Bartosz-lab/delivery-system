@@ -51,7 +51,7 @@ pub fn get_price(trade_partner: TradePartner, size: ParcelSize) -> HttpResponse 
 }
 
 pub fn get_warehouse_list(db_pool: Pool, trade_partner_id: usize) -> Vec<WarehouseBody> {
-    Warehouse::find_by_trade_partner(trade_partner_id)
+    Warehouse::find_by_trade_partner(db_pool, trade_partner_id)
         .into_iter()
         .enumerate()
         .map(|(id, warehouse)| {
@@ -70,7 +70,7 @@ pub fn get_warehouse_list(db_pool: Pool, trade_partner_id: usize) -> Vec<Warehou
 }
 
 pub fn get_warehouse(db_pool: Pool, trade_partner_id: usize, warehouse_id: usize) -> HttpResponse {
-    if let Some((_, warehouse)) = Warehouse::find_by_trade_partner(trade_partner_id)
+    if let Some((_, warehouse)) = Warehouse::find_by_trade_partner(db_pool, trade_partner_id)
         .into_iter()
         .enumerate()
         .filter(|(id, _)| *id == warehouse_id)

@@ -28,7 +28,7 @@ impl SettlementReport {
     ) -> Option<SettlementTotalReport> {
         let mut warehouses_id = warehouses_id;
         if warehouses_id.len() == 0 {
-            warehouses_id = Warehouse::find_by_trade_partner(trade_partner_id)
+            warehouses_id = Warehouse::find_by_trade_partner(db_pool, trade_partner_id)
                 .into_iter()
                 .map(|warehouse| warehouse.id)
                 .collect()
@@ -43,8 +43,11 @@ impl SettlementReport {
         let warehouses_id = warehouses_id
             .into_iter()
             .filter_map(|warehouse_id| {
-                let warehouse =
-                    Warehouse::find_by_trade_partner_and_id(trade_partner_id, warehouse_id);
+                let warehouse = Warehouse::find_by_trade_partner_and_id(
+                    db_pool,
+                    trade_partner_id,
+                    warehouse_id,
+                );
                 if warehouse.is_none() {
                     return None;
                 }

@@ -380,8 +380,10 @@ async fn add_warehouse(
         ) {
             None => HttpResponse::BadRequest().finish(),
             Some(address_id) => {
-                match Warehouse::insert(Warehouse::new(name.clone(), trade_partner_id, address_id))
-                {
+                match Warehouse::insert(
+                    db_pool,
+                    Warehouse::new(name.clone(), trade_partner_id, address_id),
+                ) {
                     None => HttpResponse::BadRequest().finish(),
                     Some(id) => HttpResponse::Created().json(id),
                 }
@@ -427,7 +429,7 @@ async fn modify_warehouse(
 ) -> impl Responder {
     let (trade_partner_id, warehouse_id) = path.into_inner();
 
-    if let Some((_, mut warehouse)) = Warehouse::find_by_trade_partner(trade_partner_id)
+    if let Some((_, mut warehouse)) = Warehouse::find_by_trade_partner(**db_pool, trade_partner_id)
         .into_iter()
         .enumerate()
         .filter(|(id, _)| *id == warehouse_id)
@@ -456,7 +458,7 @@ async fn modify_warehouse(
         if let Some(name) = &body.name {
             warehouse.name = name.clone()
         }
-        if Warehouse::save(warehouse) {
+        if Warehouse::save(**db_pool, warehouse) {
             HttpResponse::Ok().finish()
         } else {
             HttpResponse::BadRequest().finish()
@@ -485,7 +487,7 @@ async fn delete_warehouse(
 ) -> impl Responder {
     let (trade_partner_id, warehouse_id) = path.into_inner();
 
-    let warehouse_opt = Warehouse::find_by_trade_partner(trade_partner_id)
+    let warehouse_opt = Warehouse::find_by_trade_partner(**db_pool, trade_partner_id)
         .into_iter()
         .enumerate()
         .filter(|(id, _)| *id == warehouse_id)
@@ -495,7 +497,7 @@ async fn delete_warehouse(
         Some((_, warehouse)) => {
             Address::delete(**db_pool, warehouse.address_id);
 
-            if Warehouse::delete(warehouse.id) {
+            if Warehouse::delete(**db_pool, warehouse.id) {
                 HttpResponse::Ok().finish()
             } else {
                 HttpResponse::NotFound().finish()
