@@ -1,12 +1,16 @@
 use actix_web::{get, web, HttpResponse, Responder};
 use chrono::NaiveDate;
 
-use crate::auth::app::{AdminExtractor, AuthExtractor, CourierExtractor, TradePartnerExtractor};
-
-use crate::delivery::domain::service::{
-    parcel_report::{ParcelCollectReport, ParcelDeliveryReport},
-    settlement_report::SettlementReport,
+use crate::{
+    auth::app::{AdminExtractor, AuthExtractor, CourierExtractor, TradePartnerExtractor},
+    delivery::domain::service::{
+        parcel_report::{ParcelCollectReport, ParcelDeliveryReport},
+        settlement_report::SettlementReport,
+    },
+    IMPool,
 };
+
+type Pool = IMPool;
 
 #[utoipa::path(
     context_path = "/report",
@@ -105,13 +109,14 @@ async fn collect_report(
 )]
 #[get("/parcel/delivery/{date}")]
 async fn delivery_report(
+    db_pool: web::Data<Pool>,
     path: web::Path<String>,
     _: AuthExtractor,
     _: CourierExtractor,
 ) -> impl Responder {
     let date = path.into_inner();
     match NaiveDate::parse_from_str(date.as_str(), "%d-%m-%Y") {
-        Ok(date) => HttpResponse::Ok().json(ParcelDeliveryReport::gen_report(date)),
+        Ok(date) => HttpResponse::Ok().json(ParcelDeliveryReport::gen_report(**db_pool, date)),
         Err(_) => HttpResponse::BadRequest().finish(),
     }
 }

@@ -1,17 +1,23 @@
-use actix_web::{get, post, put, web, web::Json, HttpResponse, Responder};
+use actix_web::{get, post, put, web, HttpResponse, Responder};
 use chrono::NaiveDate;
 
-use crate::auth::app::{AuthExtractor, CourierExtractor, TradePartnerApiExtractor};
-use crate::delivery::app::api::parcel::structs::{
-    ModifyParcelRequest, ParcelBody, ParcelRequest, StatusBody,
+use crate::{
+    auth::app::{AuthExtractor, CourierExtractor, TradePartnerApiExtractor},
+    delivery::{
+        app::api::{
+            parcel::structs::{ModifyParcelRequest, ParcelBody, ParcelRequest, StatusBody},
+            structs::AddressRequired,
+        },
+        domain::{
+            repository::{AddressTrait, ParcelTrait, StatusRecordTrait, WarehouseTrait},
+            value_objects::ParcelStatus,
+            Address, Parcel, StatusRecord, Warehouse,
+        },
+    },
+    IMPool,
 };
-use crate::delivery::app::api::structs::AddressRequired;
-use crate::delivery::domain::repository::{
-    AddressTrait, ParcelTrait, StatusRecordTrait, WarehouseTrait,
-};
-use crate::delivery::domain::{
-    value_objects::ParcelStatus, Address, Parcel, StatusRecord, Warehouse,
-};
+
+type Pool = IMPool;
 
 #[utoipa::path(
     context_path = "/parcel",
@@ -22,12 +28,12 @@ use crate::delivery::domain::{
     )
 )]
 #[get("/{parcel_id}")]
-async fn get_parcel(path: web::Path<usize>) -> impl Responder {
+async fn get_parcel(db_pool: web::Data<Pool>, path: web::Path<usize>) -> impl Responder {
     let parcel_id = path.into_inner();
     match Parcel::find_by_id(parcel_id) {
         None => HttpResponse::NotFound().finish(),
         Some(parcel) => {
-            let address = Address::find_by_id(parcel.recipient_address_id).unwrap();
+            let address = Address::find_by_id(**db_pool, parcel.recipient_address_id).unwrap();
             HttpResponse::Ok().json(ParcelBody {
                 recipient_name: parcel.recipient_name,
                 recipient_email: parcel.recipient_email,
@@ -70,7 +76,8 @@ async fn get_parcel(path: web::Path<usize>) -> impl Responder {
 )]
 #[post("")]
 async fn add_parcel(
-    body: Json<ParcelRequest>,
+    db_pool: web::Data<Pool>,
+    body: web::Json<ParcelRequest>,
     _: AuthExtractor,
     extractor: TradePartnerApiExtractor,
 ) -> impl Responder {
@@ -78,11 +85,14 @@ async fn add_parcel(
     match (
         NaiveDate::parse_from_str(body.pickup_date.as_str(), "%d-%m-%Y"),
         Warehouse::find_by_trade_partner_and_id(extractor.trade_partner_id, body.warehouse_id),
-        Address::insert(Address::new(
-            body.recipient_address.street.clone(),
-            body.recipient_address.city.clone(),
-            body.recipient_address.postal_code.clone(),
-        )),
+        Address::insert(
+            **db_pool,
+            Address::new(
+                body.recipient_address.street.clone(),
+                body.recipient_address.city.clone(),
+                body.recipient_address.postal_code.clone(),
+            ),
+        ),
     ) {
         (Ok(date), Some(warehouse), Some(address_id)) => match Parcel::insert(Parcel::new(
             body.recipient_name.clone(),
@@ -117,7 +127,7 @@ async fn add_parcel(
 #[post("/{parcel_id}/status")]
 async fn courier_add_status(
     path: web::Path<usize>,
-    parcel_status: Json<ParcelStatus>,
+    parcel_status: web::Json<ParcelStatus>,
     _: AuthExtractor,
     _: CourierExtractor,
 ) -> impl Responder {
@@ -142,17 +152,24 @@ async fn courier_add_status(
     )
 )]
 #[put("/{parcel_id}")]
-async fn modify_parcel(path: web::Path<usize>, body: Json<ModifyParcelRequest>) -> impl Responder {
+async fn modify_parcel(
+    db_pool: web::Data<Pool>,
+    path: web::Path<usize>,
+    body: web::Json<ModifyParcelRequest>,
+) -> impl Responder {
     let parcel_id = path.into_inner();
     match Parcel::find_by_id(parcel_id) {
         None => HttpResponse::NotFound().finish(),
         Some(mut parcel) => {
             if let Some(address) = &body.address {
-                match Address::insert(Address::new(
-                    address.street.clone(),
-                    address.city.clone(),
-                    address.postal_code.clone(),
-                )) {
+                match Address::insert(
+                    **db_pool,
+                    Address::new(
+                        address.street.clone(),
+                        address.city.clone(),
+                        address.postal_code.clone(),
+                    ),
+                ) {
                     None => return HttpResponse::BadRequest().finish(),
                     Some(address_id) => {
                         match StatusRecord::insert(StatusRecord::new(

@@ -1,12 +1,21 @@
 use actix_web::HttpResponse;
 
-use crate::delivery::app::api::{
-    structs::AddressBody,
-    trade_partner::structs::{MoneyBody, TradePartnerBody, WarehouseBody},
+use crate::{
+    delivery::{
+        app::api::{
+            structs::AddressBody,
+            trade_partner::structs::{MoneyBody, TradePartnerBody, WarehouseBody},
+        },
+        domain::{
+            repository::{AddressTrait, WarehouseTrait},
+            value_objects::ParcelSize,
+            {Address, TradePartner, Warehouse},
+        },
+    },
+    IMPool,
 };
-use crate::delivery::domain::repository::{AddressTrait, WarehouseTrait};
-use crate::delivery::domain::value_objects::ParcelSize;
-use crate::delivery::domain::{Address, TradePartner, Warehouse};
+
+type Pool = IMPool;
 
 pub fn get_trade_partner(trade_partner: TradePartner) -> TradePartnerBody {
     TradePartnerBody {
@@ -41,12 +50,12 @@ pub fn get_price(trade_partner: TradePartner, size: ParcelSize) -> HttpResponse 
     }
 }
 
-pub fn get_warehouse_list(trade_partner_id: usize) -> Vec<WarehouseBody> {
+pub fn get_warehouse_list(db_pool: Pool, trade_partner_id: usize) -> Vec<WarehouseBody> {
     Warehouse::find_by_trade_partner(trade_partner_id)
         .into_iter()
         .enumerate()
         .map(|(id, warehouse)| {
-            let address = Address::find_by_id(warehouse.address_id).unwrap();
+            let address = Address::find_by_id(db_pool, warehouse.address_id).unwrap();
             WarehouseBody {
                 id: Some(id),
                 name: Some(warehouse.name),
@@ -60,14 +69,14 @@ pub fn get_warehouse_list(trade_partner_id: usize) -> Vec<WarehouseBody> {
         .collect()
 }
 
-pub fn get_warehouse(trade_partner_id: usize, warehouse_id: usize) -> HttpResponse {
+pub fn get_warehouse(db_pool: Pool, trade_partner_id: usize, warehouse_id: usize) -> HttpResponse {
     if let Some((_, warehouse)) = Warehouse::find_by_trade_partner(trade_partner_id)
         .into_iter()
         .enumerate()
         .filter(|(id, _)| *id == warehouse_id)
         .next()
     {
-        if let Some(address) = Address::find_by_id(warehouse.address_id) {
+        if let Some(address) = Address::find_by_id(db_pool, warehouse.address_id) {
             HttpResponse::Ok().json(WarehouseBody {
                 id: Some(warehouse_id),
                 name: Some(warehouse.name),

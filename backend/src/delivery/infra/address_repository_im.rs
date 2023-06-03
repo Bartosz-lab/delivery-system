@@ -1,5 +1,7 @@
-use crate::delivery::domain::repository::AddressTrait;
-use crate::delivery::domain::Address;
+use crate::{
+    delivery::domain::{repository::AddressTrait, Address},
+    IMPool,
+};
 
 use std::sync::Mutex;
 
@@ -41,8 +43,8 @@ lazy_static! {
     };
 }
 
-impl AddressTrait for Address {
-    fn insert(address: Address) -> Option<usize> {
+impl AddressTrait<IMPool> for Address {
+    fn insert(_: IMPool, address: Address) -> Option<usize> {
         let mut address = address;
         let id = DATA.lock().unwrap().last_id;
         address.id = id;
@@ -51,7 +53,7 @@ impl AddressTrait for Address {
         Some(id)
     }
 
-    fn delete(id: usize) -> bool {
+    fn delete(_: IMPool, id: usize) -> bool {
         let _ = &DATA
             .lock()
             .unwrap()
@@ -60,13 +62,13 @@ impl AddressTrait for Address {
         true
     }
 
-    fn save(address: Address) -> bool {
-        Address::delete(address.id);
+    fn save(db_pool: IMPool, address: Address) -> bool {
+        Address::delete(db_pool, address.id);
         DATA.lock().unwrap().list.push(address);
         true
     }
 
-    fn find_by_id(id: usize) -> Option<Address> {
+    fn find_by_id(_: IMPool, id: usize) -> Option<Address> {
         let list = &DATA.lock().unwrap().list;
 
         let list = list
@@ -79,7 +81,7 @@ impl AddressTrait for Address {
         }
     }
 
-    fn get_all() -> Vec<Address> {
+    fn get_all(_: IMPool) -> Vec<Address> {
         DATA.lock().unwrap().list.clone()
     }
 }

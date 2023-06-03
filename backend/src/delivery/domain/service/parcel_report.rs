@@ -1,11 +1,15 @@
 use chrono::NaiveDate;
 
-use crate::delivery::domain::{
-    repository::{AddressTrait, ParcelTrait, StatusRecordTrait, WarehouseTrait},
-    value_objects::{ParcelSize, ParcelStatus},
-    Address, StatusRecord,
+use crate::{
+    delivery::domain::{
+        repository::{AddressTrait, ParcelTrait, StatusRecordTrait, WarehouseTrait},
+        value_objects::{ParcelSize, ParcelStatus},
+        Address, Parcel, StatusRecord, Warehouse,
+    },
+    IMPool,
 };
-use crate::delivery::domain::{Parcel, Warehouse};
+
+type Pool = IMPool;
 
 pub mod structs;
 use structs::{
@@ -80,7 +84,7 @@ impl ParcelCollectReport {
 pub struct ParcelDeliveryReport;
 
 impl ParcelDeliveryReport {
-    pub fn gen_report(date: NaiveDate) -> DeliveryReport {
+    pub fn gen_report(db_pool: Pool, date: NaiveDate) -> DeliveryReport {
         let parcels = StatusRecord::find_by_status(ParcelStatus::ExpectedDelivery(
             date.format("%d-%m-%Y").to_string(),
         ))
@@ -99,7 +103,7 @@ impl ParcelDeliveryReport {
                 }
                 let parcel = parcel.unwrap();
 
-                let address = Address::find_by_id(parcel.recipient_address_id);
+                let address = Address::find_by_id(db_pool, parcel.recipient_address_id);
                 if address.is_none() {
                     return None;
                 }

@@ -1,15 +1,24 @@
-use actix_web::{delete, get, post, put, web, web::Json, HttpResponse, Responder};
+use actix_web::{delete, get, post, put, web, HttpResponse, Responder};
 use rust_decimal::{prelude::*, Decimal};
 use rusty_money::{iso, Money};
 
-use crate::auth::app::{AdminExtractor, AuthExtractor};
-use crate::delivery::app::api::trade_partner::{
-    gets,
-    structs::{MoneyBody, TradePartnerAdminBody, TradePartnerBody, WarehouseBody},
+use crate::{
+    auth::app::{AdminExtractor, AuthExtractor},
+    delivery::{
+        app::api::trade_partner::{
+            gets,
+            structs::{MoneyBody, TradePartnerAdminBody, TradePartnerBody, WarehouseBody},
+        },
+        domain::{
+            repository::{AddressTrait, TradePartnerTrait, WarehouseTrait},
+            value_objects::ParcelSize,
+            {Address, TradePartner, Warehouse},
+        },
+    },
+    IMPool,
 };
-use crate::delivery::domain::repository::{AddressTrait, TradePartnerTrait, WarehouseTrait};
-use crate::delivery::domain::value_objects::ParcelSize;
-use crate::delivery::domain::{Address, TradePartner, Warehouse};
+
+type Pool = IMPool;
 
 #[utoipa::path(
     context_path = "/tradepartner",
@@ -27,7 +36,7 @@ use crate::delivery::domain::{Address, TradePartner, Warehouse};
 )]
 #[post("")]
 async fn add_trade_parnter(
-    body: Json<TradePartnerBody>,
+    body: web::Json<TradePartnerBody>,
     _: AuthExtractor,
     _: AdminExtractor,
 ) -> impl Responder {
@@ -101,7 +110,7 @@ async fn get_trade_partner(
 #[put("/{trade_partner_id}")]
 async fn modify_trade_partner(
     path: web::Path<usize>,
-    body: Json<TradePartnerBody>,
+    body: web::Json<TradePartnerBody>,
     _: AuthExtractor,
     _: AdminExtractor,
 ) -> impl Responder {
@@ -211,7 +220,7 @@ async fn get_price(
 )]
 #[post("/{trade_partner_id}/pricelist/{size}")]
 async fn add_price(
-    body: Json<MoneyBody>,
+    body: web::Json<MoneyBody>,
     path: web::Path<(usize, ParcelSize)>,
     _: AuthExtractor,
     _: AdminExtractor,
@@ -289,6 +298,7 @@ async fn delete_price(
 )]
 #[get("/{trade_partner_id}/warehouse")]
 async fn get_warehouse_list(
+    db_pool: web::Data<Pool>,
     path: web::Path<usize>,
     _: AuthExtractor,
     _: AdminExtractor,
@@ -296,7 +306,7 @@ async fn get_warehouse_list(
     let trade_partner_id = path.into_inner();
     match TradePartner::find_by_id(trade_partner_id) {
         None => HttpResponse::NotFound().finish(),
-        Some(_) => HttpResponse::Ok().json(gets::get_warehouse_list(trade_partner_id)),
+        Some(_) => HttpResponse::Ok().json(gets::get_warehouse_list(**db_pool, trade_partner_id)),
     }
 }
 
@@ -312,12 +322,13 @@ async fn get_warehouse_list(
 )]
 #[get("/{trade_partner_id}/warehouse/{warehouse_id}")]
 async fn get_warehouse(
+    db_pool: web::Data<Pool>,
     path: web::Path<(usize, usize)>,
     _: AuthExtractor,
     _: AdminExtractor,
 ) -> impl Responder {
     let (trade_partner_id, warehouse_id) = path.into_inner();
-    gets::get_warehouse(trade_partner_id, warehouse_id)
+    gets::get_warehouse(**db_pool, trade_partner_id, warehouse_id)
 }
 
 #[utoipa::path(
@@ -337,23 +348,24 @@ async fn get_warehouse(
 )]
 #[post("/{trade_partner_id}/warehouse")]
 async fn add_warehouse(
-    body: Json<WarehouseBody>,
+    db_pool: web::Data<Pool>,
+    body: web::Json<WarehouseBody>,
     path: web::Path<usize>,
     _: AuthExtractor,
     _: AdminExtractor,
 ) -> impl Responder {
     fn add(
+        db_pool: Pool,
         trade_partner_id: usize,
         name: String,
         street: String,
         city: String,
         postal_code: String,
     ) -> HttpResponse {
-        match Address::insert(Address::new(
-            street.clone(),
-            city.clone(),
-            postal_code.clone(),
-        )) {
+        match Address::insert(
+            db_pool,
+            Address::new(street.clone(), city.clone(), postal_code.clone()),
+        ) {
             None => HttpResponse::BadRequest().finish(),
             Some(address_id) => {
                 match Warehouse::insert(Warehouse::new(name.clone(), trade_partner_id, address_id))
@@ -370,7 +382,7 @@ async fn add_warehouse(
     match (body.name.clone(), body.address.clone()) {
         (Some(name), Some(address)) => match (address.street, address.city, address.postal_code) {
             (Some(street), Some(city), Some(postal_code)) => {
-                add(trade_partner_id, name, street, city, postal_code)
+                add(**db_pool, trade_partner_id, name, street, city, postal_code)
             }
             (_, _, _) => HttpResponse::BadRequest().finish(),
         },
@@ -395,7 +407,8 @@ async fn add_warehouse(
 )]
 #[put("/{trade_partner_id}/warehouse/{warehouse_id}")]
 async fn modify_warehouse(
-    body: Json<WarehouseBody>,
+    db_pool: web::Data<Pool>,
+    body: web::Json<WarehouseBody>,
     path: web::Path<(usize, usize)>,
     _: AuthExtractor,
     _: AdminExtractor,
@@ -409,7 +422,7 @@ async fn modify_warehouse(
         .next()
     {
         if let Some(body_address) = &body.address {
-            let address = Address::find_by_id(warehouse.address_id);
+            let address = Address::find_by_id(**db_pool, warehouse.address_id);
             if address.is_none() {
                 return HttpResponse::InternalServerError().finish();
             }
@@ -424,7 +437,7 @@ async fn modify_warehouse(
             if let Some(postal_code) = &body_address.postal_code {
                 address.postal_code = postal_code.clone()
             }
-            if !Address::save(address) {
+            if !Address::save(**db_pool, address) {
                 return HttpResponse::BadRequest().finish();
             }
         }
@@ -453,6 +466,7 @@ async fn modify_warehouse(
 )]
 #[delete("/{trade_partner_id}/warehouse/{warehouse_id}")]
 async fn delete_warehouse(
+    db_pool: web::Data<Pool>,
     path: web::Path<(usize, usize)>,
     _: AuthExtractor,
     _: AdminExtractor,
@@ -467,7 +481,7 @@ async fn delete_warehouse(
     match warehouse_opt {
         None => HttpResponse::NotFound().finish(),
         Some((_, warehouse)) => {
-            Address::delete(warehouse.address_id);
+            Address::delete(**db_pool, warehouse.address_id);
 
             if Warehouse::delete(warehouse.id) {
                 HttpResponse::Ok().finish()

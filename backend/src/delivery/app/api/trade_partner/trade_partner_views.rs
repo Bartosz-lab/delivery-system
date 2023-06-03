@@ -1,10 +1,15 @@
 use actix_web::{get, web, HttpResponse, Responder};
 
-use crate::auth::app::{AuthExtractor, TradePartnerExtractor};
-use crate::delivery::app::api::trade_partner::gets;
-use crate::delivery::domain::repository::TradePartnerTrait;
-use crate::delivery::domain::value_objects::ParcelSize;
-use crate::delivery::domain::TradePartner;
+use crate::{
+    auth::app::{AuthExtractor, TradePartnerExtractor},
+    delivery::{
+        app::api::trade_partner::gets,
+        domain::{repository::TradePartnerTrait, value_objects::ParcelSize, TradePartner},
+    },
+    IMPool,
+};
+
+type Pool = IMPool;
 
 #[utoipa::path(
     context_path = "/tradepartner",
@@ -77,8 +82,15 @@ async fn get_price(
     )
 )]
 #[get("/warehouse")]
-async fn get_warehouse_list(_: AuthExtractor, extractor: TradePartnerExtractor) -> impl Responder {
-    HttpResponse::Ok().json(gets::get_warehouse_list(extractor.trade_partner_id))
+async fn get_warehouse_list(
+    db_pool: web::Data<Pool>,
+    _: AuthExtractor,
+    extractor: TradePartnerExtractor,
+) -> impl Responder {
+    HttpResponse::Ok().json(gets::get_warehouse_list(
+        **db_pool,
+        extractor.trade_partner_id,
+    ))
 }
 
 #[utoipa::path(
@@ -93,10 +105,11 @@ async fn get_warehouse_list(_: AuthExtractor, extractor: TradePartnerExtractor) 
 )]
 #[get("/warehouse/{warehouse_id}")]
 async fn get_warehouse(
+    db_pool: web::Data<Pool>,
     path: web::Path<usize>,
     _: AuthExtractor,
     extractor: TradePartnerExtractor,
 ) -> impl Responder {
     let warehouse_id = path.into_inner();
-    gets::get_warehouse(extractor.trade_partner_id, warehouse_id)
+    gets::get_warehouse(**db_pool, extractor.trade_partner_id, warehouse_id)
 }
