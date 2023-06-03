@@ -1,4 +1,9 @@
-#[derive(Clone)]
+use serde::{Deserialize, Serialize};
+
+use crate::schema::warehouses;
+
+#[derive(Clone, Serialize, Deserialize, Queryable, Identifiable, AsChangeset)]
+#[diesel(table_name = warehouses)]
 pub struct Warehouse {
     pub id: i32,
     pub name: String,

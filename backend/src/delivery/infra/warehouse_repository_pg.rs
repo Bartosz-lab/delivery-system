@@ -1,100 +1,143 @@
+use diesel::prelude::*;
+
 use crate::{
     delivery::domain::{repository::WarehouseTrait, Warehouse},
     PgPool,
 };
 
-use std::sync::Mutex;
-
-struct WarehouseRepository {
-    list: Vec<Warehouse>,
-    last_id: i32,
-}
-
-lazy_static! {
-    static ref DATA: Mutex<WarehouseRepository> = {
-        let mut address1 = Warehouse::new("Magazyn 1".to_string(), 1, 1);
-        address1.id = 3;
-        let mut address2 = Warehouse::new("Magazyn 2".to_string(), 1, 2);
-        address2.id = 4;
-        Mutex::new(WarehouseRepository {
-            list: vec![address1, address2],
-            last_id: 10,
-        })
-    };
-}
-
 impl WarehouseTrait<PgPool> for Warehouse {
-    fn insert(_: PgPool, warehouse: Warehouse) -> Option<i32> {
-        let mut warehouse = warehouse;
-        let id = DATA.lock().unwrap().last_id;
-        warehouse.id = id;
-        DATA.lock().unwrap().last_id += 1;
-        DATA.lock().unwrap().list.push(warehouse);
-        Some(id)
+    fn insert(db_pool: PgPool, warehouse: Warehouse) -> Option<i32> {
+        use crate::schema::warehouses::dsl::*;
+
+        if let Ok(mut conn) = db_pool.get() {
+            let result = diesel::insert_into(warehouses)
+                .values((
+                    &name.eq(warehouse.name),
+                    &trade_partner_id.eq(warehouse.trade_partner_id),
+                    &address_id.eq(warehouse.address_id),
+                ))
+                .returning(id)
+                .get_results(&mut conn);
+
+            if let Ok(id_vec) = result {
+                Some(id_vec[0])
+            } else {
+                None
+            }
+        } else {
+            // There should be database error
+            None
+        }
     }
 
-    fn delete(_: PgPool, id: i32) -> bool {
-        let _ = &DATA
-            .lock()
-            .unwrap()
-            .list
-            .retain(|warehouse| warehouse.id != id);
-        true
+    fn delete(db_pool: PgPool, warehouse_id: i32) -> bool {
+        use crate::schema::warehouses::dsl::*;
+        if let Ok(mut conn) = db_pool.get() {
+            let result = diesel::delete(warehouses.filter(id.eq(warehouse_id))).execute(&mut conn);
+
+            match result {
+                Ok(_) => true,
+                Err(_) => false, // There should be database error
+            }
+        } else {
+            // There should be database error
+            false
+        }
     }
 
     fn save(db_pool: PgPool, warehouse: Warehouse) -> bool {
-        Warehouse::delete(db_pool, warehouse.id);
-        DATA.lock().unwrap().list.push(warehouse);
-        true
-    }
+        if let Ok(mut conn) = db_pool.get() {
+            let result = diesel::update(&warehouse.clone())
+                .set(warehouse)
+                .execute(&mut conn);
 
-    fn find_by_id(_: PgPool, id: i32) -> Option<Warehouse> {
-        let list = &DATA.lock().unwrap().list;
-
-        let list = list
-            .into_iter()
-            .filter(|warehouse| warehouse.id == id)
-            .collect::<Vec<&Warehouse>>();
-        match list.len() {
-            0 => None,
-            _ => Some(list.first().unwrap().clone().clone()),
+            match result {
+                Ok(_) => true,
+                Err(_) => false, // There should be database error
+            }
+        } else {
+            // There should be database error
+            false
         }
     }
 
-    fn find_by_trade_partner(_: PgPool, trade_partner_id: i32) -> Vec<Warehouse> {
-        let list = &DATA.lock().unwrap().list;
+    fn find_by_id(db_pool: PgPool, warehouse_id: i32) -> Option<Warehouse> {
+        use crate::schema::warehouses::dsl::*;
+        if let Ok(mut conn) = db_pool.get() {
+            let warehouse = warehouses
+                .filter(id.eq(warehouse_id))
+                .first::<Warehouse>(&mut conn)
+                .optional();
 
-        list.into_iter()
-            .filter(|warehouse| warehouse.trade_partner_id == trade_partner_id)
-            .enumerate()
-            .map(|(id, warehouse)| {
-                let mut new = warehouse.clone();
-                new.id = id as i32;
-                new.clone()
-            })
-            .collect::<Vec<Warehouse>>()
+            warehouse.unwrap_or(None) // There should be database error
+        } else {
+            // There should be database error
+            None
+        }
+    }
+
+    fn find_by_trade_partner(db_pool: PgPool, arg_trade_partner_id: i32) -> Vec<Warehouse> {
+        use crate::schema::warehouses::dsl::*;
+        if let Ok(mut conn) = db_pool.get() {
+            let result = warehouses
+                .filter(trade_partner_id.eq(arg_trade_partner_id))
+                .load::<Warehouse>(&mut conn);
+
+            if let Ok(res) = result {
+                res.into_iter()
+                    .enumerate()
+                    .map(|(tp_id, warehouse)| {
+                        let mut new = warehouse.clone();
+                        new.id = tp_id as i32;
+                        new.clone()
+                    })
+                    .collect::<Vec<Warehouse>>()
+            } else {
+                // There should be database error
+                Vec::new()
+            }
+        } else {
+            // There should be database error
+            Vec::new()
+        }
     }
 
     fn find_by_trade_partner_and_id(
-        _: PgPool,
-        trade_partner_id: i32,
+        db_pool: PgPool,
+        arg_trade_partner_id: i32,
         warehouse_id: i32,
     ) -> Option<Warehouse> {
-        let list = &DATA.lock().unwrap().list;
+        use crate::schema::warehouses::dsl::*;
+        if let Ok(mut conn) = db_pool.get() {
+            let result = warehouses
+                .filter(trade_partner_id.eq(arg_trade_partner_id))
+                .order(id.asc())
+                .limit(1)
+                .offset(warehouse_id.into())
+                .first::<Warehouse>(&mut conn)
+                .optional();
 
-        match list
-            .into_iter()
-            .filter(|warehouse| warehouse.trade_partner_id == trade_partner_id)
-            .enumerate()
-            .filter(|(id, _)| *id as i32 == warehouse_id)
-            .next()
-        {
-            None => None,
-            Some((_, warehouse)) => Some(warehouse.clone()),
+            result.unwrap_or(None)
+        } else {
+            // There should be database error
+            None
         }
     }
 
-    fn get_all(_: PgPool) -> Vec<Warehouse> {
-        DATA.lock().unwrap().list.clone()
+    fn get_all(db_pool: PgPool) -> Vec<Warehouse> {
+        use crate::schema::warehouses::dsl::*;
+        if let Ok(mut conn) = db_pool.get() {
+            let result = warehouses.load::<Warehouse>(&mut conn);
+
+            if let Ok(res) = result {
+                res
+            } else {
+                // There should be database error
+                Vec::new()
+            }
+        } else {
+            // There should be database error
+            Vec::new()
+        }
     }
 }

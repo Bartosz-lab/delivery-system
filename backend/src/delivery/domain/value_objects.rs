@@ -17,7 +17,20 @@ pub enum ParcelStatus {
     Delivered,
 }
 
-#[derive(PartialEq, Eq, Hash, Serialize, Deserialize, ToSchema, Clone, Copy)]
+#[derive(
+    Debug,
+    PartialEq,
+    Eq,
+    Hash,
+    Serialize,
+    Deserialize,
+    ToSchema,
+    Clone,
+    Copy,
+    diesel_derive_enum::DbEnum,
+)]
+#[ExistingTypePath = "crate::schema::sql_types::Parcelsize"]
+#[DbValueStyle = "UPPERCASE"]
 pub enum ParcelSize {
     S,
     M,

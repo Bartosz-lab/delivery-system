@@ -14,10 +14,10 @@ use crate::{
             Address, Parcel, StatusRecord, Warehouse,
         },
     },
-    IMPool,
+    PgPool,
 };
 
-type Pool = IMPool;
+type Pool = PgPool;
 
 #[utoipa::path(
     context_path = "/parcel",

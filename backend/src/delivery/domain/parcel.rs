@@ -1,8 +1,9 @@
 use chrono::NaiveDate;
 
-use crate::delivery::domain::value_objects::ParcelSize;
+use crate::{delivery::domain::value_objects::ParcelSize, schema::parcels};
 
-#[derive(Clone)]
+#[derive(Clone, Queryable, Identifiable, AsChangeset)]
+#[diesel(table_name = parcels)]
 pub struct Parcel {
     pub id: i32,
     pub recipient_name: String,

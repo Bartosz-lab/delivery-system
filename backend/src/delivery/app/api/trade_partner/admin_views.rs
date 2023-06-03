@@ -329,7 +329,7 @@ async fn get_warehouse_list(
     context_path = "/tradepartner",
     tag = "Warehouse",
     responses(
-        (status = OK, body = WarehouseAdminBody, description = "Warehouse data", content_type = "application/json"),
+        (status = OK, body = WarehouseBody, description = "Warehouse data", content_type = "application/json"),
         (status = NOT_FOUND, description = "Warehouse don't exist"),
         (status = UNAUTHORIZED, description = "User isn't logged in"),
         (status = FORBIDDEN, description = "User don't have permissions"),
