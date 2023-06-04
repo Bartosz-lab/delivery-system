@@ -8,7 +8,7 @@
     "[html]": {
         "editor.formatOnSave": true
     },
-    "[ts]": {
+    "[typescript]": {
         "editor.formatOnSave": true
     },
     "files.exclude": {
