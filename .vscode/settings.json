@@ -5,6 +5,12 @@
     "[rust]": {
         "editor.formatOnSave": true
     },
+    "[html]": {
+        "editor.formatOnSave": true
+    },
+    "[ts]": {
+        "editor.formatOnSave": true
+    },
     "files.exclude": {
         ".vscode": true,
         "**/target": true,
