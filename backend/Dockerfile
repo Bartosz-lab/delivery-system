@@ -7,7 +7,13 @@ FROM rust:latest as builder
 
 # Setup working directory
 WORKDIR /usr/src/backend
-COPY . .
+
+RUN USER=root cargo init
+COPY Cargo.toml Cargo.toml
+RUN cargo fetch
+
+# copy app files
+COPY src src
 
 # Build application
 RUN cargo install --path .
@@ -18,6 +24,8 @@ COPY --from=builder /usr/local/cargo/bin/backend /usr/local/bin/backend
 
 RUN apt update
 RUN apt install -y libpq-dev
+
+USER 1001
 
 EXPOSE 8080
 
