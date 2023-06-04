@@ -19,11 +19,8 @@ export class ParcelStatusComponent {
   }
 
   find(id: string) {
-    console.log(`OK ${id}`)
     this.http.get<Parcel>(`${environment.apiUrl}/parcel/${id}`)
       .subscribe((data: Parcel) => this.parcel = data);
-
-    console.log(this.parcel);
   }
 
   back_to_find() {
