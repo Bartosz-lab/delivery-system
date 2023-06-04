@@ -8,10 +8,10 @@ use crate::{
         value_objects::{ParcelSize, PriceList},
         Parcel, TradePartner, Warehouse,
     },
-    IMPool,
+    PgPool,
 };
 
-type Pool = IMPool;
+type Pool = PgPool;
 
 pub mod structs;
 use structs::{MoneyBody, SettlementSizeReport, SettlementTotalReport, SettlementWarehouseReport};
@@ -28,13 +28,13 @@ impl SettlementReport {
     ) -> Option<SettlementTotalReport> {
         let mut warehouses_id = warehouses_id;
         if warehouses_id.len() == 0 {
-            warehouses_id = Warehouse::find_by_trade_partner(db_pool, trade_partner_id)
+            warehouses_id = Warehouse::find_by_trade_partner(db_pool.clone(), trade_partner_id)
                 .into_iter()
                 .map(|warehouse| warehouse.id)
                 .collect()
         }
 
-        let trade_partner = TradePartner::find_by_id(db_pool, trade_partner_id);
+        let trade_partner = TradePartner::find_by_id(db_pool.clone(), trade_partner_id);
         if trade_partner.is_none() {
             return None;
         }
@@ -44,7 +44,7 @@ impl SettlementReport {
             .into_iter()
             .filter_map(|warehouse_id| {
                 let warehouse = Warehouse::find_by_trade_partner_and_id(
-                    db_pool,
+                    db_pool.clone(),
                     trade_partner_id,
                     warehouse_id,
                 );
@@ -110,7 +110,7 @@ impl SettlementReport {
             .into_iter()
             .map(|(warehouse_id, warehouse_trade_partner_id)| {
                 let size_reports = SettlementReport::gen_sizes(
-                    db_pool,
+                    db_pool.clone(),
                     price_list.clone(),
                     start_date,
                     end_date,
@@ -173,7 +173,7 @@ impl SettlementReport {
                 let price = price_opt.unwrap();
 
                 let parcels = Parcel::find_by_date_and_warehouse_id(
-                    db_pool,
+                    db_pool.clone(),
                     start_date,
                     end_date,
                     warehouse_id,

@@ -13,7 +13,6 @@ impl ParcelTrait<PgPool> for Parcel {
         if let Ok(mut conn) = db_pool.get() {
             let result = diesel::insert_into(parcels)
                 .values((
-                    &id.eq(parcel.id),
                     &recipient_name.eq(parcel.recipient_name),
                     &recipient_email.eq(parcel.recipient_email),
                     &recipient_phone.eq(parcel.recipient_phone),

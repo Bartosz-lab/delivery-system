@@ -32,3 +32,10 @@ CREATE TABLE parcels (
   pickup_date DATE NOT NULL,
   size ParcelSize NOT NULL
 );
+
+CREATE TABLE status_records (
+  id SERIAL PRIMARY KEY,
+  parcel_id SERIAL NOT NULL REFERENCES parcels(id),
+  status VARCHAR NOT NULL,
+  creation_time TIMESTAMP NOT NULL
+);

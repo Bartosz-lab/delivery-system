@@ -6,10 +6,10 @@ use crate::{
         value_objects::{ParcelSize, ParcelStatus},
         Address, Parcel, StatusRecord, Warehouse,
     },
-    IMPool,
+    PgPool,
 };
 
-type Pool = IMPool;
+type Pool = PgPool;
 
 pub mod structs;
 use structs::{
@@ -27,7 +27,7 @@ impl ParcelCollectReport {
     ) -> ParcelTotalReport {
         let mut warehouses_id = warehouses_id;
         if warehouses_id.len() == 0 {
-            warehouses_id = Warehouse::get_all(db_pool)
+            warehouses_id = Warehouse::get_all(db_pool.clone())
                 .into_iter()
                 .map(|warehouse| warehouse.id)
                 .collect()
@@ -56,7 +56,8 @@ impl ParcelCollectReport {
         warehouses_id
             .into_iter()
             .map(|warehouse_id| {
-                let size_reports = ParcelCollectReport::gen_sizes(db_pool, date, warehouse_id);
+                let size_reports =
+                    ParcelCollectReport::gen_sizes(db_pool.clone(), date, warehouse_id);
 
                 let parcels_num = size_reports
                     .clone()
@@ -76,8 +77,13 @@ impl ParcelCollectReport {
     fn gen_sizes(db_pool: Pool, date: NaiveDate, warehouse_id: i32) -> Vec<ParcelSizeReport> {
         ParcelSize::iterator()
             .map(|size| {
-                let parcels =
-                    Parcel::find_by_date_and_warehouse_id(db_pool, date, date, warehouse_id, size);
+                let parcels = Parcel::find_by_date_and_warehouse_id(
+                    db_pool.clone(),
+                    date,
+                    date,
+                    warehouse_id,
+                    size,
+                );
                 let parcels_num = parcels.len();
 
                 ParcelSizeReport {
@@ -95,7 +101,7 @@ pub struct ParcelDeliveryReport;
 impl ParcelDeliveryReport {
     pub fn gen_report(db_pool: Pool, date: NaiveDate) -> DeliveryReport {
         let parcels = StatusRecord::find_by_status(
-            db_pool,
+            db_pool.clone(),
             ParcelStatus::ExpectedDelivery(date.format("%d-%m-%Y").to_string()),
         )
         .into_iter()
@@ -107,13 +113,13 @@ impl ParcelDeliveryReport {
         let parcels = parcels
             .into_iter()
             .filter_map(|id| {
-                let parcel = Parcel::find_by_id(db_pool, id);
+                let parcel = Parcel::find_by_id(db_pool.clone(), id);
                 if parcel.is_none() {
                     return None;
                 }
                 let parcel = parcel.unwrap();
 
-                let address = Address::find_by_id(db_pool, parcel.recipient_address_id);
+                let address = Address::find_by_id(db_pool.clone(), parcel.recipient_address_id);
                 if address.is_none() {
                     return None;
                 }

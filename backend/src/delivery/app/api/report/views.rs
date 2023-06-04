@@ -7,10 +7,10 @@ use crate::{
         parcel_report::{ParcelCollectReport, ParcelDeliveryReport},
         settlement_report::SettlementReport,
     },
-    IMPool,
+    PgPool,
 };
 
-type Pool = IMPool;
+type Pool = PgPool;
 
 #[utoipa::path(
     context_path = "/report",

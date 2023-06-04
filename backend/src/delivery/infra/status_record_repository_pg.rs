@@ -1,84 +1,155 @@
-use std::sync::Mutex;
+use chrono::NaiveDateTime;
+use diesel::prelude::*;
 
 use crate::{
     delivery::domain::{repository::StatusRecordTrait, value_objects::ParcelStatus, StatusRecord},
+    schema::status_records,
     PgPool,
 };
 
-struct StatusRecordRepository {
-    list: Vec<StatusRecord>,
-    last_id: i32,
-}
-
-lazy_static! {
-    static ref DATA: Mutex<StatusRecordRepository> = {
-        let mut status_record1 = StatusRecord::new(1, ParcelStatus::InDelivery);
-        status_record1.id = 1;
-        let mut status_record2 = StatusRecord::new(1, ParcelStatus::Collected);
-        status_record2.id = 2;
-        let mut status_record2 =
-            StatusRecord::new(1, ParcelStatus::ExpectedDelivery("28-05-2023".to_string()));
-        status_record2.id = 3;
-        Mutex::new(StatusRecordRepository {
-            list: vec![status_record1, status_record2],
-            last_id: 10,
-        })
-    };
+#[derive(Clone, Queryable, Identifiable)]
+#[diesel(table_name = status_records)]
+pub struct StatusRecordHelper {
+    pub id: i32,
+    pub parcel_id: i32,
+    pub status: String,
+    pub creation_time: NaiveDateTime,
 }
 
 impl StatusRecordTrait<PgPool> for StatusRecord {
-    fn insert(_: PgPool, status_record: StatusRecord) -> Option<i32> {
-        let mut status_record = status_record;
-        let id = DATA.lock().unwrap().last_id;
-        status_record.id = id;
-        DATA.lock().unwrap().last_id += 1;
-        DATA.lock().unwrap().list.push(status_record);
-        Some(id)
-    }
+    fn insert(db_pool: PgPool, status_record: StatusRecord) -> Option<i32> {
+        use crate::schema::status_records::dsl::*;
+        if let Ok(mut conn) = db_pool.get() {
+            let result = diesel::insert_into(status_records)
+                .values((
+                    &parcel_id.eq(status_record.parcel_id),
+                    &status.eq(serde_json::to_string(&status_record.status).unwrap()),
+                    &creation_time.eq(status_record.creation_time),
+                ))
+                .returning(id)
+                .get_results(&mut conn);
 
-    fn delete(_: PgPool, id: i32) -> bool {
-        let _ = &DATA
-            .lock()
-            .unwrap()
-            .list
-            .retain(|status_record: &StatusRecord| status_record.id != id);
-        true
-    }
-
-    fn save(db_pool: PgPool, status_record: StatusRecord) -> bool {
-        StatusRecord::delete(db_pool, status_record.id);
-        DATA.lock().unwrap().list.push(status_record);
-        true
-    }
-
-    fn find_by_id(_: PgPool, id: i32) -> Option<StatusRecord> {
-        let list = &DATA.lock().unwrap().list;
-
-        let list = list
-            .into_iter()
-            .filter(|status_record| status_record.id == id)
-            .collect::<Vec<&StatusRecord>>();
-        match list.len() {
-            0 => None,
-            _ => Some(list.first().unwrap().clone().clone()),
+            if let Ok(id_vec) = result {
+                Some(id_vec[0])
+            } else {
+                None
+            }
+        } else {
+            // There should be database error
+            None
         }
     }
 
-    fn find_by_parcel_id(_: PgPool, parcel_id: i32) -> Vec<StatusRecord> {
-        let list = &DATA.lock().unwrap().list;
+    fn delete(db_pool: PgPool, status_record_id: i32) -> bool {
+        use crate::schema::status_records::dsl::*;
+        if let Ok(mut conn) = db_pool.get() {
+            let result =
+                diesel::delete(status_records.filter(id.eq(status_record_id))).execute(&mut conn);
 
-        list.into_iter()
-            .filter(|status_record| status_record.parcel_id == parcel_id)
-            .map(|status_record| status_record.clone())
-            .collect::<Vec<StatusRecord>>()
+            match result {
+                Ok(_) => true,
+                Err(_) => false, // There should be database error
+            }
+        } else {
+            // There should be database error
+            false
+        }
     }
 
-    fn find_by_status(_: PgPool, status: ParcelStatus) -> Vec<StatusRecord> {
-        let list = &DATA.lock().unwrap().list;
+    fn save(db_pool: PgPool, status_record: StatusRecord) -> bool {
+        use crate::schema::status_records::dsl::*;
+        if let Ok(mut conn) = db_pool.get() {
+            let result = diesel::update(&status_record.clone())
+                .set((
+                    parcel_id.eq(status_record.parcel_id),
+                    status.eq(serde_json::to_string(&status_record.status).unwrap()),
+                    creation_time.eq(status_record.creation_time),
+                ))
+                .execute(&mut conn);
 
-        list.into_iter()
-            .filter(|status_record| status_record.status == status)
-            .map(|status_record| status_record.clone())
-            .collect::<Vec<StatusRecord>>()
+            match result {
+                Ok(_) => true,
+                Err(_) => false, // There should be database error
+            }
+        } else {
+            // There should be database error
+            false
+        }
+    }
+
+    fn find_by_id(db_pool: PgPool, status_record_id: i32) -> Option<StatusRecord> {
+        use crate::schema::status_records::dsl::*;
+        if let Ok(mut conn) = db_pool.get() {
+            let result = status_records
+                .filter(id.eq(status_record_id))
+                .first::<StatusRecordHelper>(&mut conn)
+                .optional();
+
+            match result {
+                Ok(Some(x)) => Some(StatusRecord {
+                    id: x.id,
+                    parcel_id: x.parcel_id,
+                    status: serde_json::from_str(x.status.as_str()).unwrap(),
+                    creation_time: x.creation_time,
+                }),
+                Ok(None) => None,
+                Err(_) => None, // There should be database error
+            }
+        } else {
+            // There should be database error
+            None
+        }
+    }
+
+    fn find_by_parcel_id(db_pool: PgPool, arg_parcel_id: i32) -> Vec<StatusRecord> {
+        use crate::schema::status_records::dsl::*;
+        if let Ok(mut conn) = db_pool.get() {
+            let result = status_records
+                .filter(parcel_id.eq(arg_parcel_id))
+                .load::<StatusRecordHelper>(&mut conn);
+
+            if let Ok(res) = result {
+                res.into_iter()
+                    .map(|x| StatusRecord {
+                        id: x.id,
+                        parcel_id: x.parcel_id,
+                        status: serde_json::from_str(x.status.as_str()).unwrap(),
+                        creation_time: x.creation_time,
+                    })
+                    .collect()
+            } else {
+                // There should be database error
+                Vec::new()
+            }
+        } else {
+            // There should be database error
+            Vec::new()
+        }
+    }
+
+    fn find_by_status(db_pool: PgPool, arg_status: ParcelStatus) -> Vec<StatusRecord> {
+        use crate::schema::status_records::dsl::*;
+        if let Ok(mut conn) = db_pool.get() {
+            let result = status_records
+                .filter(status.eq(serde_json::to_string(&arg_status).unwrap()))
+                .load::<StatusRecordHelper>(&mut conn);
+
+            if let Ok(res) = result {
+                res.into_iter()
+                    .map(|x| StatusRecord {
+                        id: x.id,
+                        parcel_id: x.parcel_id,
+                        status: serde_json::from_str(x.status.as_str()).unwrap(),
+                        creation_time: x.creation_time,
+                    })
+                    .collect()
+            } else {
+                // There should be database error
+                Vec::new()
+            }
+        } else {
+            // There should be database error
+            Vec::new()
+        }
     }
 }

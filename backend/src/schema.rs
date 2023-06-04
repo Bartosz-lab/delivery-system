@@ -39,6 +39,15 @@ diesel::table! {
 }
 
 diesel::table! {
+    status_records (id) {
+        id -> Int4,
+        parcel_id -> Int4,
+        status -> Varchar,
+        creation_time -> Timestamp,
+    }
+}
+
+diesel::table! {
     trade_partners (id) {
         id -> Int4,
         name -> Varchar,
@@ -69,6 +78,7 @@ diesel::table! {
 diesel::joinable!(parcels -> addresses (recipient_address_id));
 diesel::joinable!(parcels -> warehouses (warehouse_id));
 diesel::joinable!(roles -> users (user_id));
+diesel::joinable!(status_records -> parcels (parcel_id));
 diesel::joinable!(warehouses -> addresses (address_id));
 diesel::joinable!(warehouses -> trade_partners (trade_partner_id));
 
@@ -76,6 +86,7 @@ diesel::allow_tables_to_appear_in_same_query!(
     addresses,
     parcels,
     roles,
+    status_records,
     trade_partners,
     users,
     warehouses,

@@ -1,8 +1,9 @@
 use chrono::{NaiveDateTime, Utc};
 
-use crate::delivery::domain::value_objects::ParcelStatus;
+use crate::{delivery::domain::value_objects::ParcelStatus, schema::status_records};
 
-#[derive(Clone)]
+#[derive(Clone, Queryable, Identifiable)]
+#[diesel(table_name = status_records)]
 pub struct StatusRecord {
     pub id: i32,
     pub parcel_id: i32,
