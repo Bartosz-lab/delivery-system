@@ -75,11 +75,10 @@ async fn login(
             if user.check_password(body.password.clone()) {
                 let now = Utc::now();
                 let claims: TokenClaims = TokenClaims {
-                    sub: serde_json::json!(ClaimsData {
+                    user_info: ClaimsData {
                         user_id: user.id,
                         roles: Role::get_user_roles((**db_pool).clone(), user.id).unwrap(),
-                    })
-                    .to_string(),
+                    },
                     exp: (now + Duration::minutes(data.env.jwt_expires_in)).timestamp() as usize,
                     iat: now.timestamp() as usize,
                 };

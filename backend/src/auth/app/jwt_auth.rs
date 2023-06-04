@@ -16,7 +16,7 @@ pub struct ClaimsData {
 
 #[derive(Serialize, Deserialize)]
 pub struct TokenClaims {
-    pub sub: String,
+    pub user_info: ClaimsData,
     pub iat: usize,
     pub exp: usize,
 }
@@ -53,7 +53,7 @@ impl FromRequest for AuthExtractor {
 
                 match decode {
                     Ok(c) => {
-                        let user: ClaimsData = serde_json::from_str(c.claims.sub.as_str()).unwrap();
+                        let user: ClaimsData = c.claims.user_info;
                         req.extensions_mut().insert::<ClaimsData>(user.clone());
 
                         ready(Ok(AuthExtractor { user }))
