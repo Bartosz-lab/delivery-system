@@ -5,6 +5,7 @@ import { MainPageComponent } from './main-page/main-page.component';
 import { ContactComponent } from './contact/contact.component';
 import { LoginComponent } from './login/login.component';
 import { ParcelStatusComponent } from './parcel-status/parcel-status.component';
+import { ErrorPageComponent } from './error-page/error-page.component';
 
 import { authGuard } from './auth.guard';
 
@@ -15,6 +16,7 @@ const routes: Routes = [
   { path: 'login', component: LoginComponent },
   { path: 'parcel', component: ParcelStatusComponent },
   { path: 'contact', component: ContactComponent, canActivate: [authGuard,], data: {} },
+  { path: '**', component: ErrorPageComponent },
 ];
 
 @NgModule({

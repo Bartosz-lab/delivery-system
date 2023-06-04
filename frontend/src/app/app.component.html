@@ -10,14 +10,14 @@
                     </div>
                     <div class="navbar-end">
                         <div class="navbar-item has-dropdown is-hoverable" *ngIf="auth.is_admin()">
-                            <a href="" class="navbar-link">
+                            <a routerLink="/notimplmented" class="navbar-link">
                                 Trade Parner
                             </a>
                             <div class="navbar-dropdown has-text-black">
-                                <a href="" class="navbar-item">
+                                <a routerLink="/notimplmented" class="navbar-item">
                                     Warehouses
                                 </a>
-                                <a href="" class="navbar-item">
+                                <a routerLink="/notimplmented" class="navbar-item">
                                     Price List
                                 </a>
                             </div>
@@ -27,20 +27,22 @@
                                 Reports
                             </div>
                             <div class="navbar-dropdown has-text-black">
-                                <a href="" class="navbar-item" *ngIf="auth.is_admin() || auth.is_partner()">
+                                <a routerLink="/notimplmented" class="navbar-item"
+                                    *ngIf="auth.is_admin() || auth.is_partner()">
                                     Settlement Report
                                 </a>
-                                <a href="" class="navbar-item" *ngIf="auth.is_admin() || auth.is_courier()">
+                                <a routerLink="/notimplmented" class="navbar-item"
+                                    *ngIf="auth.is_admin() || auth.is_courier()">
                                     Parcel Report
                                 </a>
                             </div>
                         </div>
                         <div class="navbar-item has-dropdown is-hoverable" *ngIf="auth.is_logged()">
-                            <a href="" class="navbar-link">
+                            <a routerLink="/notimplmented" class="navbar-link">
                                 Profile
                             </a>
                             <div class="navbar-dropdown has-text-black">
-                                <a href="" class="navbar-item">
+                                <a routerLink="/notimplmented" class="navbar-item">
                                     Change Password
                                 </a>
                                 <a (click)="logout()" class="navbar-item">

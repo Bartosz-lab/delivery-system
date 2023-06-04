@@ -9,6 +9,7 @@ import { MainPageComponent } from './main-page/main-page.component';
 import { ContactComponent } from './contact/contact.component';
 import { LoginComponent } from './login/login.component';
 import { ParcelStatusComponent } from './parcel-status/parcel-status.component';
+import { ErrorPageComponent } from './error-page/error-page.component';
 
 @NgModule({
   declarations: [
@@ -16,7 +17,8 @@ import { ParcelStatusComponent } from './parcel-status/parcel-status.component';
     MainPageComponent,
     ContactComponent,
     LoginComponent,
-    ParcelStatusComponent
+    ParcelStatusComponent,
+    ErrorPageComponent
   ],
   imports: [
     BrowserModule,
