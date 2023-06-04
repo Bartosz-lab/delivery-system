@@ -70,7 +70,7 @@ export class AuthService {
     return false;
   }
 
-  is_parner() {
+  is_partner() {
     if (this.userSubject.value) {
       for (let role of this.userSubject.value.roles) {
         if (!(typeof role == 'string') && isPartnerUser(role)) {

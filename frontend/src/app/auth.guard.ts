@@ -13,7 +13,7 @@ export const authGuard: CanActivateFn = (route, state) => {
   if (authService.is_logged()) {
     if ((expected_role == Role.Admin && authService.is_admin())
       || (expected_role == Role.Courier && authService.is_courier())
-      || (expected_role == Role.PartnerUser && authService.is_parner())
+      || (expected_role == Role.PartnerUser && authService.is_partner())
       || expected_role == null) {
       return true;
     }

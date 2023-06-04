@@ -11,10 +11,10 @@ export class AppComponent {
   title = 'DeliverySystem';
 
   constructor(
-    private authService: AuthService
+    public auth: AuthService
   ) { }
 
   logout() {
-    this.authService.logout();
+    this.auth.logout();
   }
 }
