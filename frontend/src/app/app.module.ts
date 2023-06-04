@@ -8,13 +8,15 @@ import { AppComponent } from './app.component';
 import { MainPageComponent } from './main-page/main-page.component';
 import { ContactComponent } from './contact/contact.component';
 import { LoginComponent } from './login/login.component';
+import { ParcelStatusComponent } from './parcel-status/parcel-status.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     MainPageComponent,
     ContactComponent,
-    LoginComponent
+    LoginComponent,
+    ParcelStatusComponent
   ],
   imports: [
     BrowserModule,

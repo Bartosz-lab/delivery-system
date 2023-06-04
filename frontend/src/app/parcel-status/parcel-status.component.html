@@ -1,0 +1,165 @@
+<div class="container has-text-centered">
+    <div *ngIf="!parcel" class="column is-4 is-offset-4">
+        <h3 class="title">Find Parcel:</h3>
+        <div class="box">
+            <div class="field">
+                <div class="control">
+                    <input type="number" class="input is-large" #findParcel (keyup.enter)="find(findParcel.value)">
+                </div>
+            </div>
+            <button type="button" class="button is-block is-info is-large is-fullwidth"
+                (click)="find(findParcel.value)">Find</button>
+        </div>
+    </div>
+
+    <div *ngIf="parcel" class="column is-10 is-offset-1">
+        <h3 class="title">Parcel</h3>
+        <div class="box">
+            <div class="columns is-centered">
+                <div class="column">
+                    <h4 class="title  has-text-black">Recipient</h4>
+                    <div class="field is-horizontal">
+                        <div class="field-label is-normal">
+                            <label class="label">Name</label>
+                        </div>
+                        <div class="field-body">
+                            <div class="field">
+                                <p class="control">
+                                    <input class="input is-static" type="text" value="{{ parcel.recipient_name }}"
+                                        readonly>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="field is-horizontal">
+                        <div class="field-label is-normal">
+                            <label class="label">Email</label>
+                        </div>
+                        <div class="field-body">
+                            <div class="field">
+                                <p class="control">
+                                    <input class="input is-static" type="text" value="{{ parcel.recipient_email }}"
+                                        readonly>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="field is-horizontal">
+                        <div class="field-label is-normal">
+                            <label class="label">Phone</label>
+                        </div>
+                        <div class="field-body">
+                            <div class="field">
+                                <p class="control">
+                                    <input class="input is-static" type="phone" value="{{ parcel.recipient_phone }}"
+                                        readonly>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="column">
+                    <h4 class="title  has-text-black">Address</h4>
+                    <div class="field is-horizontal">
+                        <div class="field-label is-normal">
+                            <label class="label">Street</label>
+                        </div>
+                        <div class="field-body">
+                            <div class="field">
+                                <p class="control">
+                                    <input class="input is-static" type="text" value="{{ parcel.recipient_name }}"
+                                        readonly>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="field is-horizontal">
+                        <div class="field-label is-normal">
+                            <label class="label">Email</label>
+                        </div>
+                        <div class="field-body">
+                            <div class="field">
+                                <p class="control">
+                                    <input class="input is-static" type="text" value="{{ parcel.recipient_email }}"
+                                        readonly>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="field is-horizontal">
+                        <div class="field-label is-normal">
+                            <label class="label">Phone</label>
+                        </div>
+                        <div class="field-body">
+                            <div class="field">
+                                <p class="control">
+                                    <input class="input is-static" type="phone" value="{{ parcel.recipient_phone }}"
+                                        readonly>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="columns is-centered">
+                <div class="column is-7">
+                    <h4 class="title  has-text-black">Info:</h4>
+                    <div class="field is-horizontal">
+                        <div class="field-label is-normal">
+                            <label class="label">Size</label>
+                        </div>
+                        <div class="field-body">
+                            <div class="field">
+                                <p class="control">
+                                    <input class="input is-static" type="text" value="{{ parcel.size }}" readonly>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="field is-horizontal">
+                        <div class="field-label is-normal">
+                            <label class="label">Pickup date</label>
+                        </div>
+                        <div class="field-body">
+                            <div class="field">
+                                <p class="control">
+                                    <input class="input is-static " type="text" value="{{ parcel.pickup_date }}"
+                                        readonly>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <h4 class="title  has-text-black">Status History:</h4>
+                    <div class="field is-horizontal" *ngFor="let status of parcel.status_list;">
+                        <div class=" field-label is-normal">
+                            <label class="label">{{ status.time }}</label>
+                        </div>
+                        <div class="field-body">
+                            <div class="field">
+                                <p class="control">
+                                    <input class="input is-static" type="text" value="{{ status.status | json }}"
+                                        readonly>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="buttons columns is-centered">
+
+                <button type="button" class="column button is-block is-warning is-large is-narrow"
+                    (click)="back_to_find()">Edit Parcel</button>
+                <button type="button" class="column button is-block is-danger is-large is-narrow"
+                    (click)="back_to_find()">Find
+                    next Parcel</button>
+            </div>
+        </div>
+
+
+    </div>
+</div>
