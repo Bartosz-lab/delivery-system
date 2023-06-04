@@ -4,7 +4,9 @@ extern crate lazy_static;
 #[macro_use]
 extern crate diesel;
 
+use actix_cors::Cors;
 use actix_web::{
+    http,
     middleware::{Logger, NormalizePath},
     web, App, HttpServer,
 };
@@ -46,12 +48,20 @@ async fn main() -> Result<(), impl Error> {
     println!("🚀 Server started successfully");
 
     HttpServer::new(move || {
+        let cors = Cors::default()
+            .allow_any_origin()
+            .allowed_methods(vec!["GET", "POST", "PUT", "DELETE"])
+            .allowed_headers(vec![http::header::AUTHORIZATION, http::header::ACCEPT])
+            .allowed_header(http::header::CONTENT_TYPE)
+            .max_age(3600);
+
         App::new()
             .app_data(web::Data::new(pool.clone()))
             .app_data(web::Data::new(()))
             .app_data(web::Data::new(AppState {
                 env: config.clone(),
             }))
+            .wrap(cors)
             .wrap(Logger::new("%a \"%r\" %s %b %T"))
             .service(SwaggerUi::new("/swagger-ui/{_:.*}").urls(swagger_urls.clone()))
             .service(
