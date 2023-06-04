@@ -11,6 +11,7 @@ import { LoginComponent } from './login/login.component';
 import { ParcelStatusComponent } from './parcel-status/parcel-status.component';
 import { ErrorPageComponent } from './error-page/error-page.component';
 import { TradeParnerListComponent } from './trade-partner/list/list.component';
+import { TradePartnerViewComponent } from './trade-partner/view/view.component';
 
 @NgModule({
   declarations: [
@@ -20,7 +21,8 @@ import { TradeParnerListComponent } from './trade-partner/list/list.component';
     LoginComponent,
     ParcelStatusComponent,
     ErrorPageComponent,
-    TradeParnerListComponent
+    TradeParnerListComponent,
+    TradePartnerViewComponent
   ],
   imports: [
     BrowserModule,

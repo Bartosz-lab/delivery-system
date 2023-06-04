@@ -7,6 +7,7 @@ import { LoginComponent } from './login/login.component';
 import { ParcelStatusComponent } from './parcel-status/parcel-status.component';
 import { ErrorPageComponent } from './error-page/error-page.component';
 import { TradeParnerListComponent } from './trade-partner/list/list.component';
+import { TradePartnerViewComponent } from './trade-partner/view/view.component';
 
 import { authGuard } from './auth.guard';
 
@@ -18,6 +19,7 @@ const routes: Routes = [
   { path: 'parcel', component: ParcelStatusComponent },
   { path: 'contact', component: ContactComponent },
   { path: 'tradepartner', component: TradeParnerListComponent, canActivate: [authGuard,], data: { role: Role.Admin } },
+  { path: 'tradepartner/:id', component: TradePartnerViewComponent, canActivate: [authGuard,], data: { role: Role.Admin } },
   { path: '**', component: ErrorPageComponent },
 ];
 

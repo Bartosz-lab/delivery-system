@@ -2,7 +2,7 @@
     <div class="column is-4 is-offset-4">
         <h3 class="title">Trade Partners:</h3>
         <div class="box buttons">
-            <button routerLink="/tradepartner/{{ trade_partner.id }}"
+            <button [routerLink]="['/tradepartner', trade_partner.id]"
                 class="button is-light is-block is-large is-fullwidth" *ngFor="let trade_partner of list;">
                 {{ trade_partner.name }}
             </button>
