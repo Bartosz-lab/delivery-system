@@ -1,6 +1,6 @@
 use actix_web::{
     cookie::{time::Duration as ActixWebDuration, Cookie},
-    post, web,
+    http, post, web,
     web::Json,
     HttpResponse, Responder,
 };
@@ -94,7 +94,10 @@ async fn login(
                     .http_only(true)
                     .finish();
 
-                HttpResponse::Accepted().cookie(cookie).finish()
+                HttpResponse::Accepted()
+                    .cookie(cookie)
+                    .append_header((http::header::ACCESS_CONTROL_ALLOW_CREDENTIALS, "true"))
+                    .finish()
             } else {
                 HttpResponse::NotAcceptable().finish()
             }

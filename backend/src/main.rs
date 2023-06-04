@@ -50,6 +50,7 @@ async fn main() -> Result<(), impl Error> {
     HttpServer::new(move || {
         let cors = Cors::default()
             .allow_any_origin()
+            .supports_credentials()
             .allowed_methods(vec!["GET", "POST", "PUT", "DELETE"])
             .allowed_headers(vec![http::header::AUTHORIZATION, http::header::ACCEPT])
             .allowed_header(http::header::CONTENT_TYPE)
