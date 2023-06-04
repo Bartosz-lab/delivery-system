@@ -21,7 +21,7 @@ use crate::{
 };
 
 mod structs;
-use structs::{ChangePassBody, LoginBody};
+use structs::{ChangePassBody, LoginBody, JWT};
 
 type Pool = PgPool;
 
@@ -34,7 +34,7 @@ type Pool = PgPool;
         version = "1.0.0"
     ),
     paths(login, logout, changepass),
-    components(schemas(LoginBody, ChangePassBody)),
+    components(schemas(LoginBody, ChangePassBody, JWT)),
     tags(
         (name = "Auth", description = "Authenticate endpoints"),
         (name = "Other", description = "Other endpoints"),
@@ -58,7 +58,7 @@ pub fn config(cfg: &mut web::ServiceConfig) {
         description = "Login to app",
     ),
     responses(
-        (status = ACCEPTED, description = "User was correctly logged"),
+        (status = ACCEPTED, body = JWT, description = "User was correctly logged", content_type = "application/json"),
         (status = NOT_ACCEPTABLE, description = "Wrong login or password")
     )
 )]
@@ -97,7 +97,7 @@ async fn login(
                 HttpResponse::Accepted()
                     .cookie(cookie)
                     .append_header((http::header::ACCESS_CONTROL_ALLOW_CREDENTIALS, "true"))
-                    .finish()
+                    .json(JWT { token })
             } else {
                 HttpResponse::NotAcceptable().finish()
             }
