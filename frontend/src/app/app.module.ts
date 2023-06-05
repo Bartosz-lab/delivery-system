@@ -12,6 +12,7 @@ import { ParcelStatusComponent } from './parcel-status/parcel-status.component';
 import { ErrorPageComponent } from './error-page/error-page.component';
 import { TradeParnerListComponent } from './trade-partner/list/list.component';
 import { TradePartnerViewComponent } from './trade-partner/view/view.component';
+import { TradePartnerModifyComponent } from './trade-partner/modify/modify.component';
 
 @NgModule({
   declarations: [
@@ -22,7 +23,8 @@ import { TradePartnerViewComponent } from './trade-partner/view/view.component';
     ParcelStatusComponent,
     ErrorPageComponent,
     TradeParnerListComponent,
-    TradePartnerViewComponent
+    TradePartnerViewComponent,
+    TradePartnerModifyComponent
   ],
   imports: [
     BrowserModule,
