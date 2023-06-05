@@ -9,19 +9,9 @@
                         </a>
                     </div>
                     <div class="navbar-end">
-                        <div class="navbar-item has-dropdown is-hoverable" *ngIf="auth.is_admin()">
-                            <a routerLink="/tradepartner" class="navbar-link">
-                                Trade Parner
-                            </a>
-                            <div class="navbar-dropdown has-text-black">
-                                <a routerLink="/notimplmented" class="navbar-item">
-                                    Warehouses
-                                </a>
-                                <a routerLink="/notimplmented" class="navbar-item">
-                                    Price List
-                                </a>
-                            </div>
-                        </div>
+                        <a routerLink="/tradepartner" class="navbar-item" *ngIf="auth.is_admin()">
+                            Trade Parner
+                        </a>
                         <div class="navbar-item has-dropdown is-hoverable" *ngIf="auth.is_logged()">
                             <div class="navbar-link">
                                 Reports

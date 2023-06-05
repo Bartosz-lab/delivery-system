@@ -20,7 +20,10 @@ export class ParcelStatusComponent {
 
   find(id: string) {
     this.http.get<Parcel>(`${environment.apiUrl}/parcel/${id}`)
-      .subscribe((data: Parcel) => this.parcel = data);
+      .subscribe((data: Parcel) => {
+        this.parcel = data;
+        this.parcel.status_list.reverse();
+      });
   }
 
   back_to_find() {
