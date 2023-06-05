@@ -20,7 +20,6 @@ const httpOptions = {
 export class TradePartnerModifyComponent implements OnInit {
   trade_partner?: TradePartner;
   trade_partner_id?: number;
-  price_list_edit = false
 
   constructor(
     private http: HttpClient,

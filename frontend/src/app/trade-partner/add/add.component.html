@@ -1,0 +1,22 @@
+<div class="container has-text-centered">
+    <div class="column is-4 is-offset-4">
+        <h3 class="title">Add Trade Partner:</h3>
+        <div class="box">
+            <div class="field">
+                <div class="control">
+                    <input type="text" class="input is-large" #name>
+                </div>
+            </div>
+
+            <div class="buttons">
+                <button (click)="back()" class="column button is-block is-danger is-large">
+                    Back
+                </button>
+                <button (click)="save(name.value)" class="column button is-block is-primary is-large">
+                    Add
+                </button>
+
+            </div>
+        </div>
+    </div>
+</div>

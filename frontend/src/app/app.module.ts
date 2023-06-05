@@ -13,6 +13,7 @@ import { ErrorPageComponent } from './error-page/error-page.component';
 import { TradeParnerListComponent } from './trade-partner/list/list.component';
 import { TradePartnerViewComponent } from './trade-partner/view/view.component';
 import { TradePartnerModifyComponent } from './trade-partner/modify/modify.component';
+import { TradePartnerAddComponent } from './trade-partner/add/add.component';
 
 @NgModule({
   declarations: [
@@ -24,7 +25,8 @@ import { TradePartnerModifyComponent } from './trade-partner/modify/modify.compo
     ErrorPageComponent,
     TradeParnerListComponent,
     TradePartnerViewComponent,
-    TradePartnerModifyComponent
+    TradePartnerModifyComponent,
+    TradePartnerAddComponent
   ],
   imports: [
     BrowserModule,
