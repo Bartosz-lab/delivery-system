@@ -27,7 +27,7 @@ export class AuthService {
     private http: HttpClient,
   ) {
     this.jwthelper = new JwtHelperService();
-    this.userSubject = new BehaviorSubject(JSON.parse(localStorage.getItem('user')!));
+    this.userSubject = new BehaviorSubject(JSON.parse(sessionStorage.getItem('user')!));
     this.user = this.userSubject.asObservable();
   }
 
@@ -36,7 +36,7 @@ export class AuthService {
       .pipe(map(response => {
         // store user details in local storage to keep user logged in between page refreshes
         const user = this.jwthelper.decodeToken(response['token']).user_info
-        localStorage.setItem('user', JSON.stringify(user));
+        sessionStorage.setItem('user', JSON.stringify(user));
         this.userSubject.next(user);
         return response;
       }));
@@ -44,7 +44,7 @@ export class AuthService {
 
   logout() {
     this.http.post<any>(`${environment.apiUrl}/auth/logout`, null, httpOptions).subscribe()
-    localStorage.removeItem('user');
+    sessionStorage.removeItem('user');
     this.userSubject.next(null);
     this.router.navigate(['/login']);
   }
